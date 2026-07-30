@@ -59,6 +59,9 @@ final class FfaListener implements Listener
     /** @var array<string, bool> */
     private array $insideFfa = [];
 
+    /** @var array<string, bool> */
+    private array $hideLobbyPlayers = [];
+
     /** @var array<string, array<string, true>> */
     private array $sentBarrier = [];
 
@@ -90,6 +93,7 @@ final class FfaListener implements Listener
         $this->knownPlayers[$key] = true;
         $this->names[$key] = $player->getName();
         $this->combatUntil[$key] = 0;
+        $this->hideLobbyPlayers[$key] = false;
         $this->insideFfa[$key] = $this->plugin->ffa()->isInside($player->getPosition());
         if ($this->insideFfa[$key]) {
             $this->plugin->ffa()->giveLobbyItems($player);
@@ -102,6 +106,7 @@ final class FfaListener implements Listener
             $number = count(glob($this->plugin->getServer()->getDataPath() . 'players' . DIRECTORY_SEPARATOR . '*') ?: []) + 1;
             $this->plugin->getServer()->broadcastMessage($this->plugin->branding()->format('{prefix}{secondary}Bienvenue à {primary}') . $player->getName() . $this->plugin->branding()->format(' {secondary}sur {primary}{server_name}{secondary} ! Souhaitez-lui la bienvenue avec {primary}/bvn {dark}(#') . $number . ')');
         }
+        $this->refreshAllVisibility();
     }
 
     public function onQuit(PlayerQuitEvent $event): void
@@ -109,7 +114,7 @@ final class FfaListener implements Listener
         $event->setQuitMessage('');
         $this->plugin->scoreboards()->remove($event->getPlayer());
         $key = strtolower($event->getPlayer()->getName());
-        unset($this->combatUntil[$key], $this->insideFfa[$key], $this->sentBarrier[$key], $this->combatOpponent[$key], $this->names[$key]);
+        unset($this->combatUntil[$key], $this->insideFfa[$key], $this->hideLobbyPlayers[$key], $this->sentBarrier[$key], $this->combatOpponent[$key], $this->names[$key]);
         foreach ($this->combatOpponent as $playerKey => $opponentKey) {
             if ($opponentKey === $key) {
                 unset($this->combatOpponent[$playerKey]);
@@ -232,8 +237,18 @@ final class FfaListener implements Listener
             return;
         }
         $event->cancel();
-        if ($this->plugin->ffa()->lobbyAction($item) === 'settings') {
+        $action = $this->plugin->ffa()->lobbyAction($item);
+        if ($action === 'settings') {
             (new \VisionEngineFFA\Commands\SettingsCommand($this->plugin))->open($event->getPlayer());
+            return;
+        }
+        if ($action === 'players_visibility' && $this->plugin->ffa()->isInside($player->getPosition())) {
+            $key = strtolower($player->getName());
+            $hidden = !($this->hideLobbyPlayers[$key] ?? false);
+            $this->hideLobbyPlayers[$key] = $hidden;
+            $this->plugin->ffa()->updateVisibilityItem($player, $hidden);
+            $this->refreshVisibility($player);
+            $player->sendTip($hidden ? '§cJoueurs cachés.' : '§aJoueurs affichés.');
         }
     }
 
@@ -268,7 +283,7 @@ final class FfaListener implements Listener
 
         if ($toInside && !$this->plugin->ffa()->hasLobbyItems($player)) {
             $player->getEffects()->clear();
-            $this->plugin->ffa()->giveLobbyItems($player);
+            $this->plugin->ffa()->giveLobbyItems($player, $this->hideLobbyPlayers[$key] ?? false);
         }
 
         if (!$toInside && $this->isInCombat($player)) {
@@ -276,9 +291,11 @@ final class FfaListener implements Listener
         }
 
         if (($this->insideFfa[$key] ?? false) && !$toInside) {
+            $this->hideLobbyPlayers[$key] = false;
             $this->plugin->ffa()->giveKit($player);
             $player->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Kit FFA équipé.'));
         } elseif (!($this->insideFfa[$key] ?? false) && $toInside) {
+            $this->hideLobbyPlayers[$key] = false;
             $player->getEffects()->clear();
             $this->plugin->ffa()->giveLobbyItems($player);
         }
@@ -360,6 +377,7 @@ final class FfaListener implements Listener
     private function refreshVisibility(Player $viewer): void
     {
         $viewerKey = strtolower($viewer->getName());
+        $hideLobbyPlayers = ($this->insideFfa[$viewerKey] ?? false) && ($this->hideLobbyPlayers[$viewerKey] ?? false);
         $enabled = $this->plugin->settings()->hasCombatVisibility($viewer->getName());
         $opponentKey = $enabled ? $this->activeOpponent($viewer) : null;
 
@@ -367,7 +385,7 @@ final class FfaListener implements Listener
             if ($target === $viewer) {
                 continue;
             }
-            if ($opponentKey === null || strtolower($target->getName()) === $opponentKey) {
+            if (!$hideLobbyPlayers && ($opponentKey === null || strtolower($target->getName()) === $opponentKey)) {
                 $viewer->showPlayer($target);
             } else {
                 $viewer->hidePlayer($target);

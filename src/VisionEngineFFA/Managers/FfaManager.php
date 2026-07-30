@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace VisionEngineFFA\Managers;
 
+use pocketmine\block\utils\DyeColor;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\enchantment\VanillaEnchantments;
 use pocketmine\item\PotionType;
@@ -104,19 +105,29 @@ final class FfaManager
         }
     }
 
-    public function giveLobbyItems(Player $player): void
+    public function giveLobbyItems(Player $player, bool $playersHidden = false): void
     {
         $inventory = $player->getInventory();
         $inventory->clearAll();
         $player->getArmorInventory()->clearAll();
-        $inventory->setItem(3, $this->lobbyItem(VanillaItems::PAPER(), 'soon', '§r§8-'));
+        $this->updateVisibilityItem($player, $playersHidden);
         $inventory->setItem(4, $this->lobbyItem(VanillaItems::COMPASS(), 'settings', $this->plugin->branding()->format('§r{primary}Paramètres')));
         $inventory->setItem(5, $this->lobbyItem(VanillaItems::PAPER(), 'soon', '§r§8-'));
     }
 
+    public function updateVisibilityItem(Player $player, bool $playersHidden): void
+    {
+        $dye = VanillaItems::DYE()->setColor($playersHidden ? DyeColor::RED : DyeColor::GREEN);
+        $player->getInventory()->setItem(2, $this->lobbyItem(
+            $dye,
+            'players_visibility',
+            $playersHidden ? '§r§cAfficher les joueurs' : '§r§aCacher les joueurs'
+        ));
+    }
+
     public function hasLobbyItems(Player $player): bool
     {
-        return $this->isLobbyItem($player->getInventory()->getItem(3))
+        return $this->isLobbyItem($player->getInventory()->getItem(2))
             && $this->isLobbyItem($player->getInventory()->getItem(4))
             && $this->isLobbyItem($player->getInventory()->getItem(5));
     }
