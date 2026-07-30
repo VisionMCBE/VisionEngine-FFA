@@ -293,7 +293,6 @@ final class FfaListener implements Listener
 
     public function onPotionLaunch(ProjectileLaunchEvent $event): void
     {
-        // Les potions guidees sont gerees dans onUse: splash instantane sur soi.
     }
 
     public function onProjectileLaunch(ProjectileLaunchEvent $event): void
