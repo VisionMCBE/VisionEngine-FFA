@@ -10,7 +10,7 @@ use pocketmine\permission\DefaultPermissions;
 use pocketmine\player\Player;
 use vision\Main;
 
-final class KitFfaCommand extends Command
+final class KitFFACommand extends Command
 {
     public function __construct(private readonly Main $plugin)
     {

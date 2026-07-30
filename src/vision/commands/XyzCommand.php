@@ -6,14 +6,17 @@ namespace vision\commands;
 
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
+use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
+use pocketmine\network\mcpe\protocol\types\BoolGameRule;
 use pocketmine\permission\DefaultPermissions;
+use pocketmine\player\Player;
 use vision\Main;
 
 final class XyzCommand extends Command
 {
     public function __construct(private readonly Main $plugin)
     {
-        parent::__construct('xyz', 'Active ou désactive les coordonnées scoreboard.', '/xyz <on|off>');
+        parent::__construct('xyz', 'Active ou désactive les coordonnées.', '/xyz <on|off>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
     }
 
@@ -30,9 +33,19 @@ final class XyzCommand extends Command
         }
 
         $enabled = $mode === 'on';
-        $this->plugin->getConfig()->setNested('scoreboard.show_xyz', $enabled);
+        $this->plugin->getConfig()->setNested('coordinates.enabled', $enabled);
         $this->plugin->getConfig()->save();
 
-        $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Coordonnées scoreboard: ') . ($enabled ? $this->plugin->branding()->format('{success}activées') : $this->plugin->branding()->format('{error}désactivées')));
+        foreach ($this->plugin->getServer()->getOnlinePlayers() as $player) {
+            self::applyCoordinates($player, $enabled);
+        }
+        $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? $this->plugin->branding()->format('{success}activées') : $this->plugin->branding()->format('{error}désactivées')));
+    }
+
+    public static function applyCoordinates(Player $player, bool $show): void
+    {
+        $packet = new GameRulesChangedPacket();
+        $packet->gameRules = ['showcoordinates' => new BoolGameRule($show, false)];
+        $player->getNetworkSession()->sendDataPacket($packet);
     }
 }

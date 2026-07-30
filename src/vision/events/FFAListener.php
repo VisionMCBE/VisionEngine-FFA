@@ -37,11 +37,12 @@ use pocketmine\world\Position;
 use pocketmine\world\sound\PotionSplashSound;
 use pocketmine\world\sound\ThrowSound;
 use vision\Main;
+use vision\commands\XyzCommand;
 
 use function count;
 use function glob;
 
-final class FfaListener implements Listener
+final class FFAListener implements Listener
 {
     private const COMBAT_SECONDS = 15;
     private const WALL_HEIGHT = 5;
@@ -95,6 +96,7 @@ final class FfaListener implements Listener
         $this->combatUntil[$key] = 0;
         $this->hideLobbyPlayers[$key] = false;
         $this->insideFfa[$key] = $this->plugin->ffa()->isInside($player->getPosition());
+        XyzCommand::applyCoordinates($player, (bool) $this->plugin->getConfig()->getNested('coordinates.enabled', false));
         if ($this->insideFfa[$key]) {
             $this->plugin->ffa()->giveLobbyItems($player);
         }

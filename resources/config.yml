@@ -16,10 +16,12 @@ colors:
 
 scoreboard:
   enabled_by_default: true
-  show_xyz: false
   title: "{primary}{server_name} {mode_name}"
   combat_title: "{error}Combat"
   separator: "{secondary}-----------------"
+
+coordinates:
+  enabled: false
 
 messages:
   prefix: "{bracket}[{primary}{server_name}{bracket}] "

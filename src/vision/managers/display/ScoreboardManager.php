@@ -36,7 +36,6 @@ final class ScoreboardManager
         $pearl = Main::getInstance()->cooldowns()->remaining($player->getName(), 'pearl');
         $gapple = Main::getInstance()->cooldowns()->remaining($player->getName(), 'gapple');
         $brand = Main::getInstance()->branding();
-        $showXyz = (bool) Main::getInstance()->getConfig()->getNested('scoreboard.show_xyz', false);
 
         $this->title($player, $combat > 0 ? $brand->combatTitle() : $brand->scoreboardTitle());
         $this->line($player, 1, $brand->separator());
@@ -46,9 +45,6 @@ final class ScoreboardManager
             $this->line($player, 4, $brand->format('{primary}| {text}Pearl : ') . ($pearl > 0 ? $brand->format('{error}') . $pearl . 's' : $brand->format('{success}Prêt')));
             $this->line($player, 5, $brand->format('{primary}| {text}Pomme : ') . ($gapple > 0 ? $brand->format('{error}') . $gapple . 's' : $brand->format('{success}Prêt')));
             $next = 6;
-            if ($showXyz) {
-                $this->line($player, $next++, $this->xyzLine($player, $brand));
-            }
             $this->line($player, $next++, $brand->separator());
             $this->line($player, $next, $brand->format(' {secondary}{server_ip}'));
             $this->clearAfter($player, $next);
@@ -57,18 +53,9 @@ final class ScoreboardManager
         $this->line($player, 3, $brand->format('{primary}| {text}Pearl : ') . ($pearl > 0 ? $brand->format('{error}') . $pearl . 's' : $brand->format('{success}Prêt')));
         $this->line($player, 4, $brand->format('{primary}| {text}Pomme : ') . ($gapple > 0 ? $brand->format('{error}') . $gapple . 's' : $brand->format('{success}Prêt')));
         $next = 5;
-        if ($showXyz) {
-            $this->line($player, $next++, $this->xyzLine($player, $brand));
-        }
         $this->line($player, $next++, $brand->separator());
         $this->line($player, $next, $brand->format(' {secondary}{server_ip}'));
         $this->clearAfter($player, $next);
-    }
-
-    private function xyzLine(Player $player, \vision\managers\display\BrandingManager $brand): string
-    {
-        $pos = $player->getPosition();
-        return $brand->format('{primary}| {text}XYZ : {secondary}') . $pos->getFloorX() . ' ' . $pos->getFloorY() . ' ' . $pos->getFloorZ();
     }
 
     private function title(Player $player, string $title): void

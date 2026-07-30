@@ -3,7 +3,7 @@ placeholders:
   "{mode_name}": "Nom du mode de jeu depuis config.yml."
   "{server_ip}": "IP affichée du serveur."
   "server.motd": "MOTD appliqué automatiquement au démarrage."
-  "scoreboard.show_xyz": "Affiche les coordonnées X/Y/Z dans le scoreboard."
+  "coordinates.enabled": "Affiche les coordonnées Minecraft avec la règle showcoordinates."
   "{prefix}": "Préfixe serveur complet."
   "{ac_prefix}": "Préfixe anticheat complet."
   "{bracket}": "Couleur des crochets."

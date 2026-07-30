@@ -10,14 +10,14 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\ServerProperties;
 use pocketmine\utils\Config;
 use pocketmine\utils\SingletonTrait;
-use vision\commands\KitFfaCommand;
+use vision\commands\KitFFACommand;
 use vision\commands\LeaderboardCommand;
 use vision\commands\MaintenanceCommand;
 use vision\commands\RekitCommand;
 use vision\commands\SettingsCommand;
 use vision\commands\StatsCommand;
 use vision\commands\XyzCommand;
-use vision\events\FfaListener;
+use vision\events\FFAListener;
 use vision\events\ResourcePackSendListener;
 use vision\items\ItemRegistry;
 use vision\managers\Manager;
@@ -70,7 +70,7 @@ final class Main extends PluginBase
 
         $map = $this->getServer()->getCommandMap();
         $this->removeNonOpVanillaCommands();
-        $map->register('vision', new KitFfaCommand($this));
+        $map->register('vision', new KitFFACommand($this));
         $map->register('vision', new LeaderboardCommand($this));
         $map->register('vision', new MaintenanceCommand($this));
         $map->register('vision', new RekitCommand($this));
@@ -78,7 +78,7 @@ final class Main extends PluginBase
         $map->register('vision', new StatsCommand($this));
         $map->register('vision', new XyzCommand($this));
 
-        $this->getServer()->getPluginManager()->registerEvents(new FfaListener($this), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new FFAListener($this), $this);
         $this->getServer()->getPluginManager()->registerEvents(Manager::ANTICHEAT(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new ResourcePackSendListener(), $this);
         $this->getScheduler()->scheduleRepeatingTask(new ScoreboardTask(), 20);
