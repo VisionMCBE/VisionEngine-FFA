@@ -25,8 +25,8 @@ final class DatabaseManager
         }
 
         $plugin = self::$plugin ?? Main::getInstance();
-        $path = is_file($plugin->getDataFolder() . 'config.json')
-            ? $plugin->getDataFolder() . 'config.json'
+        $path = is_file($plugin->getDataFolder() . 'database.json')
+            ? $plugin->getDataFolder() . 'database.json'
             : $plugin->getDataFolder() . 'database.json';
         $config = new Config($path, Config::JSON);
         $profiles = $config->get('profiles', null);

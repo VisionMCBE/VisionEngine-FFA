@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace vision;
 
-use NayTools\NayTools;
 use pocketmine\command\defaults\VanillaCommand;
 use pocketmine\plugin\PluginBase;
 use pocketmine\ServerProperties;
@@ -25,18 +24,16 @@ use vision\tasks\PackSendTask;
 use vision\tasks\ScoreboardTask;
 
 final class Main extends PluginBase
-{
+final class Main extends PluginBase {
     use SingletonTrait;
 
-    public function onEnable(): void
-    {
+    public function onEnable(): void {
         self::setInstance($this);
 
-        $this->saveResource('config.yml');
-        $this->saveResource('config.json');
-        $this->saveResource('database.json');
-        $this->saveResource('knockback.yml');
-        $this->saveResource('placeholders.yml');
+        foreach (['config.yml', 'config.json', 'database.json', 'knockback.yml', "placeholders.yml"] as $file) {
+            $this->saveResource($file);
+        }
+
         Manager::setup($this);
         Manager::PACK()->install();
         $this->getServer()->getConfigGroup()->setConfigString(ServerProperties::MOTD, Manager::BRANDING()->motd());
@@ -45,7 +42,8 @@ final class Main extends PluginBase
 
         $map = $this->getServer()->getCommandMap();
         $this->removeNonOpVanillaCommands();
-        foreach ([
+        
+        $map->registerAll($this->getName(), [
             new KitFFACommand($this),
             new LeaderboardCommand($this),
             new MaintenanceCommand($this),
@@ -53,9 +51,8 @@ final class Main extends PluginBase
             new SettingsCommand($this),
             new StatsCommand($this),
             new XyzCommand($this),
-        ] as $command) {
-            $map->register('vision', $command);
-        }
+        ]);
+        
 
         foreach ([
             new FFAListener($this),
@@ -75,37 +72,18 @@ final class Main extends PluginBase
         }
     }
 
-    public function onDisable(): void
-    {
+    public function onDisable(): void {
         Manager::shutdown();
     }
 
-    private function removeNonOpVanillaCommands(): void
-    {
+    private function removeNonOpVanillaCommands(): void {
         $allowed = [
-            'ban' => true,
-            'ban-ip' => true,
-            'banlist' => true,
-            'clear' => true,
-            'deop' => true,
-            'difficulty' => true,
-            'effect' => true,
-            'enchant' => true,
-            'gamemode' => true,
-            'give' => true,
-            'kick' => true,
-            'kill' => true,
-            'op' => true,
-            'pardon' => true,
-            'pardon-ip' => true,
-            'say' => true,
-            'status' => true,
-            'stop' => true,
-            'tp' => true,
-            'time' => true,
-            'timings' => true,
-            'title' => true,
-            'whitelist' => true,
+            'ban', 'ban-ip', 'banlist', 'clear',
+            'deop', 'difficulty', 'effect',
+            'enchant', 'gamemode', 'give', 'kick',
+            'kill', 'op', 'pardon', 'pardon-ip',
+            'say', 'status', 'stop', 'tp',
+            'time', 'timings', 'title', 'whitelist',
         ];
 
         $map = $this->getServer()->getCommandMap();
@@ -116,6 +94,4 @@ final class Main extends PluginBase
             $map->unregister($command);
         }
     }
-
-
 }
