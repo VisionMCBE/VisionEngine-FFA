@@ -64,7 +64,7 @@ final class Main extends PluginBase
         $this->installResourcePack();
 
         Manager::setup($this);
-        $this->applyMotd();
+        $this->getServer()->getConfigGroup()->setConfigString(ServerProperties::MOTD, Manager::BRANDING()->motd());
 
         ItemRegistry::registerAll();
 
@@ -85,7 +85,6 @@ final class Main extends PluginBase
         $this->getScheduler()->scheduleRepeatingTask(new EnvironmentTask(), 20 * 10);
         $this->getScheduler()->scheduleRepeatingTask(new LeaderboardTask(), 20 * 10);
         $this->getScheduler()->scheduleRepeatingTask(new PackSendTask(), 1);
-        $this->getLogger()->info('vision charge.');
     }
 
     public function onDisable(): void
@@ -194,11 +193,6 @@ final class Main extends PluginBase
         $valid = $zip->numFiles > 0 && $zip->getNameIndex(0) === 'manifest.json';
         $zip->close();
         return $valid;
-    }
-
-    private function applyMotd(): void
-    {
-        $this->getServer()->getConfigGroup()->setConfigString(ServerProperties::MOTD, Manager::BRANDING()->motd());
     }
 
     public function ffa(): FfaManager
