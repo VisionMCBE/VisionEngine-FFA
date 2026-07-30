@@ -19,13 +19,11 @@ final class LeaderboardManager {
     /** @var array<string, FloatingTextParticle> */
     private array $particles = [];
 
-    public function __construct(private readonly Main $plugin)
-    {
+    public function __construct(private readonly Main $plugin)  {
         $this->config = new Config($plugin->getDataFolder() . 'leaderboards.json', Config::JSON, []);
     }
 
-    public function place(string $type, Player $player): void
-    {
+    public function place(string $type, Player $player): void  {
         $world = $player->getWorld();
         $key = strtolower($world->getFolderName()) . '|' . $type;
         $position = $player->getPosition();
@@ -41,8 +39,7 @@ final class LeaderboardManager {
         $this->refreshOne($key, $this->config->get($key));
     }
 
-    public function removeNearest(Position $position): bool
-    {
+    public function removeNearest(Position $position): bool  {
         $nearest = null;
         $distance = 25.0;
         foreach ($this->config->getAll() as $key => $data) {
@@ -67,8 +64,7 @@ final class LeaderboardManager {
         return true;
     }
 
-    public function refreshAll(): void
-    {
+    public function refreshAll(): void  {
         foreach ($this->config->getAll() as $key => $data) {
             if (is_array($data)) {
                 $this->refreshOne((string) $key, $data);
@@ -77,8 +73,7 @@ final class LeaderboardManager {
     }
 
     /** @param array<string, mixed> $data */
-    private function refreshOne(string $key, array $data): void
-    {
+    private function refreshOne(string $key, array $data): void  {
         $world = $this->plugin->getServer()->getWorldManager()->getWorldByName((string) ($data['world'] ?? ''));
         $type = (string) ($data['type'] ?? '');
         if ($world === null || ($type !== 'kills' && $type !== 'deaths')) {
@@ -108,8 +103,7 @@ final class LeaderboardManager {
         ), $particle);
     }
 
-    private function remove(string $key): void
-    {
+    private function remove(string $key): void  {
         $particle = $this->particles[$key] ?? null;
         $data = $this->config->get($key);
         if ($particle !== null && is_array($data)) {

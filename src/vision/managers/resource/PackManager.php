@@ -26,13 +26,11 @@ final class PackManager implements Listener {
     /** @var array<int, PackSendEntry> */
     private array $sendQueue = [];
 
-    public function __construct(private readonly Main $plugin)
-    {
+    public function __construct(private readonly Main $plugin)  {
         $this->requestedChunks = new WeakMap();
     }
 
-    public function install(): void
-    {
+    public function install(): void  {
         $packName = 'VisionPackFFA.zip';
         $this->plugin->saveResource($packName, true);
 
@@ -76,8 +74,7 @@ final class PackManager implements Listener {
         $config->save();
     }
 
-    public function onDataPacketSend(DataPacketSendEvent $event): void
-    {
+    public function onDataPacketSend(DataPacketSendEvent $event): void  {
         $packets = $event->getPackets();
         $changed = false;
         foreach ($packets as $index => $packet) {
@@ -100,8 +97,7 @@ final class PackManager implements Listener {
         }
     }
 
-    public function onDataPacketReceive(DataPacketReceiveEvent $event): void
-    {
+    public function onDataPacketReceive(DataPacketReceiveEvent $event): void  {
         $packet = $event->getPacket();
         if (!$packet instanceof ResourcePackChunkRequestPacket) {
             return;
@@ -140,8 +136,7 @@ final class PackManager implements Listener {
         ));
     }
 
-    public function tick(int $tick): void
-    {
+    public function tick(int $tick): void  {
         foreach ($this->sendQueue as $key => $entry) {
             if (!$entry->tick($tick, $key)) {
                 unset($this->sendQueue[$key]);
@@ -149,13 +144,11 @@ final class PackManager implements Listener {
         }
     }
 
-    public function clear(): void
-    {
+    public function clear(): void  {
         $this->sendQueue = [];
     }
 
-    private function isValidZip(string $path): bool
-    {
+    private function isValidZip(string $path): bool  {
         $zip = new \ZipArchive();
         if ($zip->open($path) !== true) {
             return false;

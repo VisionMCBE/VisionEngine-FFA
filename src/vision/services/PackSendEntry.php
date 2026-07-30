@@ -16,13 +16,11 @@ final class PackSendEntry {
         private readonly int $sendInterval
     ) {}
 
-    public function addPacket(ClientboundPacket $packet): void
-    {
+    public function addPacket(ClientboundPacket $packet): void  {
         $this->packets[] = $packet;
     }
 
-    public function tick(int $tick, int $queueKey): bool
-    {
+    public function tick(int $tick, int $queueKey): bool  {
         if (!$this->session->isConnected()) {
             return false;
         }

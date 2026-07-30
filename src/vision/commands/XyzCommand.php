@@ -16,14 +16,12 @@ use pocketmine\player\Player;
 use vision\Main;
 
 final class XyzCommand extends Command {
-    public function __construct(private readonly Main $plugin)
-    {
+    public function __construct(private readonly Main $plugin)  {
         parent::__construct('xyz', 'Active ou désactive les coordonnées.', '/xyz <on|off>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args): void
-    {
+    public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
         if (!$this->testPermission($sender)) {
             return;
         }
@@ -44,8 +42,7 @@ final class XyzCommand extends Command {
         $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? Manager::BRANDING()->format('{success}activées') : Manager::BRANDING()->format('{error}désactivées')));
     }
 
-    public static function applyCoordinates(Player $player, bool $show): void
-    {
+    public static function applyCoordinates(Player $player, bool $show): void  {
         $packet = new GameRulesChangedPacket();
         $packet->gameRules = ['showcoordinates' => new BoolGameRule($show, false)];
         $player->getNetworkSession()->sendDataPacket($packet);

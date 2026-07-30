@@ -55,25 +55,21 @@ final class AntiCheatManager implements Listener {
 
     private static ?self $instance = null;
 
-    public function __construct()
-    {
+    public function __construct()  {
         self::$instance = $this;
     }
 
-    public static function getInstance(): ?self
-    {
+    public static function getInstance(): ?self  {
         return self::$instance;
     }
 
-    public function grantMovementExemption(Player $player, int $ticks): void
-    {
+    public function grantMovementExemption(Player $player, int $ticks): void  {
         $key = strtolower($player->getName());
         $this->state[$key] ??= $this->emptyState();
         $this->state[$key]['kbExempt'] = max($this->state[$key]['kbExempt'], Server::getInstance()->getTick() + $ticks);
     }
 
-    public function onMove(PlayerMoveEvent $event): void
-    {
+    public function onMove(PlayerMoveEvent $event): void  {
         $player = $event->getPlayer();
         $key = strtolower($player->getName());
         if (!$this->shouldCheck($player)) {
@@ -97,8 +93,7 @@ final class AntiCheatManager implements Listener {
         $st['prevHoriz'] = $horiz;
     }
 
-    public function onDamage(EntityDamageByEntityEvent $event): void
-    {
+    public function onDamage(EntityDamageByEntityEvent $event): void  {
         $damager = $event->getDamager();
         $victim = $event->getEntity();
         if (!$damager instanceof Player || !$victim instanceof Entity || !$this->shouldCheck($damager)) {
@@ -113,8 +108,7 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    public function onBreak(BlockBreakEvent $event): void
-    {
+    public function onBreak(BlockBreakEvent $event): void  {
         $player = $event->getPlayer();
         if (!$this->shouldCheck($player)) {
             return;
@@ -142,8 +136,7 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    public function onTeleport(EntityTeleportEvent $event): void
-    {
+    public function onTeleport(EntityTeleportEvent $event): void  {
         $entity = $event->getEntity();
         if (!$entity instanceof Player) {
             return;
@@ -153,23 +146,20 @@ final class AntiCheatManager implements Listener {
         $this->state[$key]['tpExempt'] = Server::getInstance()->getTick() + 20;
     }
 
-    public function onQuit(PlayerQuitEvent $event): void
-    {
+    public function onQuit(PlayerQuitEvent $event): void  {
         $key = strtolower($event->getPlayer()->getName());
         unset($this->state[$key], $this->clicks[$key], $this->breaks[$key], $this->reachViolations[$key]);
         $this->clear($event->getPlayer());
     }
 
-    private function shouldCheck(Player $player): bool
-    {
+    private function shouldCheck(Player $player): bool  {
         return $player->isConnected()
             && !$player->getServer()->isOp($player->getName())
             && !$player->getGamemode()->equals(GameMode::CREATIVE())
             && !$player->getGamemode()->equals(GameMode::SPECTATOR());
     }
 
-    private function checkSpeed(Player $player, array &$st, int $tick, float $horiz): void
-    {
+    private function checkSpeed(Player $player, array &$st, int $tick, float $horiz): void  {
         if ($tick < $st['tpExempt'] || $tick < $st['kbExempt'] || $this->inLiquid($player) || $this->onIce($player)) {
             $st['speedBuf'] = 0.0;
             return;
@@ -195,8 +185,7 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    private function checkFly(Player $player, array &$st, int $tick, float $dy): void
-    {
+    private function checkFly(Player $player, array &$st, int $tick, float $dy): void  {
         if ($player->isOnGround() || $this->inLiquid($player) || $this->onClimbable($player) || $tick < $st['tpExempt'] || $tick < $st['kbExempt']) {
             $st['air'] = 0;
             $st['flyViol'] = 0.0;
@@ -218,8 +207,7 @@ final class AntiCheatManager implements Listener {
         $st['prevDy'] = $dy;
     }
 
-    private function checkPhase(Player $player, array &$st, int $tick, float $dx, float $dy, float $dz): void
-    {
+    private function checkPhase(Player $player, array &$st, int $tick, float $dx, float $dy, float $dz): void  {
         if ($tick < $st['tpExempt'] || $tick < $st['kbExempt'] || abs($dx) + abs($dy) + abs($dz) < 0.0001) {
             $st['phaseBuf'] = 0.0;
             return;
@@ -244,8 +232,7 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    private function trackCps(Player $player): void
-    {
+    private function trackCps(Player $player): void  {
         $key = strtolower($player->getName());
         $now = microtime(true);
         $this->clicks[$key][] = $now;
@@ -256,8 +243,7 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    private function checkReach(Player $damager, Entity $victim): void
-    {
+    private function checkReach(Player $damager, Entity $victim): void  {
         $key = strtolower($damager->getName());
         $distance = $damager->getEyePos()->distance($victim->getPosition()->add(0, $victim->getSize()->getHeight() / 2, 0));
         if ($distance <= self::REACH_MAX) {
@@ -272,8 +258,7 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    private function touchesFallableBlock(Player $player, AxisAlignedBB $box): bool
-    {
+    private function touchesFallableBlock(Player $player, AxisAlignedBB $box): bool  {
         $world = $player->getWorld();
         $minX = (int) floor($box->minX + 0.00001);
         $maxX = (int) floor($box->maxX - 0.00001);
@@ -294,31 +279,26 @@ final class AntiCheatManager implements Listener {
         return false;
     }
 
-    private function inLiquid(Player $player): bool
-    {
+    private function inLiquid(Player $player): bool  {
         return $player->getWorld()->getBlock($player->getPosition()) instanceof Liquid
             || $player->getWorld()->getBlock($player->getPosition()->add(0, 1, 0)) instanceof Liquid;
     }
 
-    private function onClimbable(Player $player): bool
-    {
+    private function onClimbable(Player $player): bool  {
         return $player->getWorld()->getBlock($player->getPosition()) instanceof Ladder;
     }
 
-    private function onIce(Player $player): bool
-    {
+    private function onIce(Player $player): bool  {
         $pos = $player->getPosition();
         return str_contains(strtolower($player->getWorld()->getBlockAt($pos->getFloorX(), $pos->getFloorY() - 1, $pos->getFloorZ())->getName()), 'ice');
     }
 
     /** @return array{prevHoriz: float, speedBuf: float, air: int, tpExempt: int, kbExempt: int, prevDy: float, flyViol: float, phaseBuf: float} */
-    private function emptyState(): array
-    {
+    private function emptyState(): array  {
         return ['prevHoriz' => 0.0, 'speedBuf' => 0.0, 'air' => 0, 'tpExempt' => 0, 'kbExempt' => 0, 'prevDy' => 0.0, 'flyViol' => 0.0, 'phaseBuf' => 0.0];
     }
 
-    private function flag(Player $player, string $check, string $details): void
-    {
+    private function flag(Player $player, string $check, string $details): void  {
         if (!$player->isConnected() || $player->getServer()->isOp($player->getName())) {
             return;
         }
@@ -350,13 +330,11 @@ final class AntiCheatManager implements Listener {
         $this->violations[$key][$check] = $entry;
     }
 
-    private function clear(Player $player): void
-    {
+    private function clear(Player $player): void  {
         unset($this->violations[strtolower($player->getName())]);
     }
 
-    private function notifyStaff(Player $player, string $check, string $details, int $vl, bool $kick): void
-    {
+    private function notifyStaff(Player $player, string $check, string $details, int $vl, bool $kick): void  {
         $moderatorId = Manager::RANK()->rank(RankType::MODERATEUR)->getId();
         $message = Manager::BRANDING()->anticheatPrefix()
             . ($kick ? Manager::BRANDING()->format('{error}Kick {secondary}') : Manager::BRANDING()->format('{warning}Alerte {secondary}'))

@@ -11,8 +11,7 @@ use vision\ranks\RankType;
 final class RankManager {
     public function __construct(private readonly PDO $database) {}
 
-    public function initSchema(): void
-    {
+    public function initSchema(): void  {
         $this->database->exec(
             'CREATE TABLE IF NOT EXISTS player_ranks ('
             . 'player_name VARCHAR(255) PRIMARY KEY, '
@@ -23,8 +22,7 @@ final class RankManager {
         );
     }
 
-    public function getPlayerRank(string $player): RankComponent
-    {
+    public function getPlayerRank(string $player): RankComponent  {
         $statement = $this->database->prepare('SELECT rank_name, expires_at FROM player_ranks WHERE player_name = :player');
         $statement->execute(['player' => strtolower($player)]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
@@ -40,8 +38,7 @@ final class RankManager {
         return $this->rank(RankType::fromString((string) $row['rank_name']) ?? RankType::PAYSAN);
     }
 
-    public function rank(RankType $type): RankComponent
-    {
+    public function rank(RankType $type): RankComponent  {
         $i = 0;
         foreach (RankType::cases() as $case) {
             if ($case === $type) {

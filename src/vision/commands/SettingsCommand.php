@@ -15,14 +15,12 @@ use pocketmine\player\Player;
 use vision\Main;
 
 final class SettingsCommand extends Command {
-    public function __construct(private readonly Main $plugin)
-    {
+    public function __construct(private readonly Main $plugin)  {
         parent::__construct('settings', 'Parametres joueur.', '/settings');
         $this->setPermission(DefaultPermissionNames::GROUP_USER);
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args): void
-    {
+    public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
         if (!$sender instanceof Player) {
             $sender->sendMessage('Commande en jeu uniquement.');
             return;
@@ -31,8 +29,7 @@ final class SettingsCommand extends Command {
         $this->open($sender);
     }
 
-    public function open(Player $sender): void
-    {
+    public function open(Player $sender): void  {
         $colors = ['Defaut', 'Rouge', 'Vert', 'Bleu', 'Jaune', 'Rose', 'Cyan', 'Blanc'];
         $colorKeys = ['default', 'red', 'green', 'blue', 'yellow', 'pink', 'cyan', 'white'];
         $selectedColor = array_search(Manager::SETTINGS()->getPotionParticleColorName($sender->getName()), $colorKeys, true);

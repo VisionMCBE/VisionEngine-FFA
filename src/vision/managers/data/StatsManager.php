@@ -10,14 +10,12 @@ use vision\Main;
 final class StatsManager {
     private Config $config;
 
-    public function __construct(Main $plugin)
-    {
+    public function __construct(Main $plugin)  {
         $this->config = new Config($plugin->getDataFolder() . 'stats.json', Config::JSON, []);
     }
 
     /** @return array{kills: int, deaths: int, streak: int, best_streak: int} */
-    public function get(string $player): array
-    {
+    public function get(string $player): array  {
         $key = strtolower($player);
         return [
             'kills' => (int) $this->config->getNested($key . '.kills', 0),
@@ -27,8 +25,7 @@ final class StatsManager {
         ];
     }
 
-    public function addKill(string $player): void
-    {
+    public function addKill(string $player): void  {
         $stats = $this->get($player);
         ++$stats['kills'];
         ++$stats['streak'];
@@ -36,23 +33,20 @@ final class StatsManager {
         $this->set($player, $stats);
     }
 
-    public function addDeath(string $player): void
-    {
+    public function addDeath(string $player): void  {
         $stats = $this->get($player);
         ++$stats['deaths'];
         $stats['streak'] = 0;
         $this->set($player, $stats);
     }
 
-    public function kd(string $player): float
-    {
+    public function kd(string $player): float  {
         $stats = $this->get($player);
         return $stats['kills'] / max(1, $stats['deaths']);
     }
 
     /** @return list<array{name: string, value: int}> */
-    public function top(string $stat, int $limit = 10): array
-    {
+    public function top(string $stat, int $limit = 10): array  {
         if ($stat !== 'kills' && $stat !== 'deaths') {
             return [];
         }
@@ -72,8 +66,7 @@ final class StatsManager {
     }
 
     /** @param array{kills: int, deaths: int, streak: int, best_streak: int} $stats */
-    private function set(string $player, array $stats): void
-    {
+    private function set(string $player, array $stats): void  {
         $key = strtolower($player);
         foreach ($stats as $name => $value) {
             $this->config->setNested($key . '.' . $name, $value);

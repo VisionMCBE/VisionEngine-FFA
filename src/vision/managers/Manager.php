@@ -36,8 +36,7 @@ final class Manager {
     /** @var array<string, object> */
     private static array $registrants = [];
 
-    public static function setup(Main $plugin): void
-    {
+    public static function setup(Main $plugin): void  {
         DatabaseManager::init($plugin);
 
         self::$registrants['BRANDING'] = new BrandingManager($plugin);
@@ -58,15 +57,13 @@ final class Manager {
         }
     }
 
-    public static function shutdown(): void
-    {
+    public static function shutdown(): void  {
         self::PACK()->clear();
         DatabaseManager::close();
         self::$registrants = [];
     }
 
-    public static function __callStatic(string $name, array $arguments): object
-    {
+    public static function __callStatic(string $name, array $arguments): object  {
         $name = strtoupper($name);
         return self::$registrants[$name] ?? throw new RuntimeException('Manager non chargé : ' . $name);
     }

@@ -72,22 +72,19 @@ final class FFAListener implements Listener {
 
     public function __construct(private readonly Main $plugin) {}
 
-    public function onBlockBreak(BlockBreakEvent $event): void
-    {
+    public function onBlockBreak(BlockBreakEvent $event): void  {
         if ($event->getPlayer()->getGamemode() !== GameMode::CREATIVE) {
             $event->cancel();
         }
     }
 
-    public function onBlockPlace(BlockPlaceEvent $event): void
-    {
+    public function onBlockPlace(BlockPlaceEvent $event): void  {
         if ($event->getPlayer()->getGamemode() !== GameMode::CREATIVE) {
             $event->cancel();
         }
     }
 
-    public function onJoin(PlayerJoinEvent $event): void
-    {
+    public function onJoin(PlayerJoinEvent $event): void  {
         $player = $event->getPlayer();
         $event->setJoinMessage('');
         $key = strtolower($player->getName());
@@ -112,8 +109,7 @@ final class FFAListener implements Listener {
         $this->refreshAllVisibility();
     }
 
-    public function onQuit(PlayerQuitEvent $event): void
-    {
+    public function onQuit(PlayerQuitEvent $event): void  {
         $event->setQuitMessage('');
         Manager::SCOREBOARD()->remove($event->getPlayer());
         $key = strtolower($event->getPlayer()->getName());
@@ -127,8 +123,7 @@ final class FFAListener implements Listener {
         $this->refreshAllVisibility();
     }
 
-    public function onDamage(EntityDamageByEntityEvent $event): void
-    {
+    public function onDamage(EntityDamageByEntityEvent $event): void  {
         Manager::KNOCKBACK()->apply($event);
 
         $victim = $event->getEntity();
@@ -162,8 +157,7 @@ final class FFAListener implements Listener {
         $this->refreshAllVisibility();
     }
 
-    public function onChat(PlayerChatEvent $event): void
-    {
+    public function onChat(PlayerChatEvent $event): void  {
         $player = $event->getPlayer();
         $rank = Manager::RANK()->getPlayerRank($player->getName());
         $brand = Manager::BRANDING();
@@ -181,8 +175,7 @@ final class FFAListener implements Listener {
         });
     }
 
-    public function onDeath(PlayerDeathEvent $event): void
-    {
+    public function onDeath(PlayerDeathEvent $event): void  {
         $victim = $event->getPlayer();
         $event->setDrops([]);
         $event->setXpDropAmount(0);
@@ -203,8 +196,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    public function onConsume(PlayerItemConsumeEvent $event): void
-    {
+    public function onConsume(PlayerItemConsumeEvent $event): void  {
         $player = $event->getPlayer();
         $item = $event->getItem();
         if (!$item instanceof GoldenApple && !$item instanceof GoldenAppleEnchanted) {
@@ -218,8 +210,7 @@ final class FFAListener implements Listener {
         Manager::COOLDOWN()->add($player->getName(), 'gapple', 15);
     }
 
-    public function onUse(PlayerItemUseEvent $event): void
-    {
+    public function onUse(PlayerItemUseEvent $event): void  {
         $item = $event->getItem();
         $player = $event->getPlayer();
         if ($item instanceof SplashPotionItem && Manager::SETTINGS()->hasGuidedPotions($player->getName())) {
@@ -255,13 +246,11 @@ final class FFAListener implements Listener {
         }
     }
 
-    public function onDrop(PlayerDropItemEvent $event): void
-    {
+    public function onDrop(PlayerDropItemEvent $event): void  {
         $event->cancel();
     }
 
-    public function onInventoryTransaction(InventoryTransactionEvent $event): void
-    {
+    public function onInventoryTransaction(InventoryTransactionEvent $event): void  {
         foreach ($event->getTransaction()->getActions() as $action) {
             if (Manager::FFA()->isLobbyItem($action->getSourceItem()) || Manager::FFA()->isLobbyItem($action->getTargetItem())) {
                 $event->cancel();
@@ -270,8 +259,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    public function onMove(PlayerMoveEvent $event): void
-    {
+    public function onMove(PlayerMoveEvent $event): void  {
         $player = $event->getPlayer();
         $key = strtolower($player->getName());
         $fromInside = Manager::FFA()->isInside($event->getFrom());
@@ -311,12 +299,10 @@ final class FFAListener implements Listener {
         }
     }
 
-    public function onPotionLaunch(ProjectileLaunchEvent $event): void
-    {
+    public function onPotionLaunch(ProjectileLaunchEvent $event): void  {
     }
 
-    public function onProjectileLaunch(ProjectileLaunchEvent $event): void
-    {
+    public function onProjectileLaunch(ProjectileLaunchEvent $event): void  {
         $projectile = $event->getEntity();
         $owner = $projectile->getOwningEntity();
         if (!$owner instanceof Player || !$projectile instanceof \pocketmine\entity\projectile\EnderPearl) {
@@ -330,13 +316,11 @@ final class FFAListener implements Listener {
         Manager::COOLDOWN()->add($owner->getName(), 'pearl', 15);
     }
 
-    private function isInCombat(Player $player): bool
-    {
+    private function isInCombat(Player $player): bool  {
         return ($this->combatUntil[strtolower($player->getName())] ?? 0) > time();
     }
 
-    private function endCombat(Player $player): void
-    {
+    private function endCombat(Player $player): void  {
         $key = strtolower($player->getName());
         $opponent = $this->combatOpponent[$key] ?? null;
         $this->combatUntil[$key] = 0;
@@ -357,8 +341,7 @@ final class FFAListener implements Listener {
         $this->refreshAllVisibility();
     }
 
-    private function activeOpponent(Player $player): ?string
-    {
+    private function activeOpponent(Player $player): ?string  {
         if (!$this->isInCombat($player)) {
             return null;
         }
@@ -370,15 +353,13 @@ final class FFAListener implements Listener {
         return $target instanceof Player && $this->isInCombat($target) ? strtolower($target->getName()) : null;
     }
 
-    private function refreshAllVisibility(): void
-    {
+    private function refreshAllVisibility(): void  {
         foreach ($this->plugin->getServer()->getOnlinePlayers() as $player) {
             $this->refreshVisibility($player);
         }
     }
 
-    private function refreshVisibility(Player $viewer): void
-    {
+    private function refreshVisibility(Player $viewer): void  {
         $viewerKey = strtolower($viewer->getName());
         $hideLobbyPlayers = ($this->insideFfa[$viewerKey] ?? false) && ($this->hideLobbyPlayers[$viewerKey] ?? false);
         $enabled = Manager::SETTINGS()->hasCombatVisibility($viewer->getName());
@@ -396,8 +377,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    private function nearestEnemy(Player $player, float $range): ?Player
-    {
+    private function nearestEnemy(Player $player, float $range): ?Player  {
         $nearest = null;
         $best = $range * $range;
         foreach ($player->getWorld()->getPlayers() as $candidate) {
@@ -413,8 +393,7 @@ final class FFAListener implements Listener {
         return $nearest;
     }
 
-    private function applyInstantPotion(Player $player, PotionType $type): void
-    {
+    private function applyInstantPotion(Player $player, PotionType $type): void  {
         if ($type === PotionType::HEALING()) {
             $player->setHealth(min($player->getMaxHealth(), $player->getHealth() + 4.0));
         } elseif ($type === PotionType::STRONG_HEALING()) {
@@ -422,8 +401,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    private function addPotionParticle(Player $player): void
-    {
+    private function addPotionParticle(Player $player): void  {
         $color = Manager::SETTINGS()->getPotionParticleColor($player->getName());
         $particle = $color === null
             ? new PotionSplashParticle(PotionSplashParticle::DEFAULT_COLOR())
@@ -431,15 +409,13 @@ final class FFAListener implements Listener {
         $player->getWorld()->addParticle($player->getPosition(), $particle);
     }
 
-    private function killMessage(Player $killer, Player $victim): string
-    {
+    private function killMessage(Player $killer, Player $victim): string  {
         $potion = VanillaItems::SPLASH_POTION()->setType(PotionType::STRONG_HEALING());
         return '§9[Vision] §f' . $killer->getName() . ' §8[' . $this->countItems($killer, $potion) . '] §7a désintégré §f'
             . $victim->getName() . ' §8[' . $this->countItems($victim, $potion) . ']§7.';
     }
 
-    private function countItems(Player $player, \pocketmine\item\Item $needle): int
-    {
+    private function countItems(Player $player, \pocketmine\item\Item $needle): int  {
         $count = 0;
         foreach ($player->getInventory()->getContents() as $item) {
             if ($item->equals($needle, false, false)) {
@@ -449,13 +425,11 @@ final class FFAListener implements Listener {
         return $count;
     }
 
-    private function sendBarrierToward(Player $player, Position $pos): void
-    {
+    private function sendBarrierToward(Player $player, Position $pos): void  {
         $this->sendCombatWallTowardBoth($player, $pos);
     }
 
-    private function sendCombatWallTowardBoth(Player $player, Position $pos): void
-    {
+    private function sendCombatWallTowardBoth(Player $player, Position $pos): void  {
         $this->sendCombatWallToward($player, $pos);
         $opponentKey = $this->activeOpponent($player);
         if ($opponentKey === null) {
@@ -467,8 +441,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    private function sendCombatWallToward(Player $player, Position $pos): void
-    {
+    private function sendCombatWallToward(Player $player, Position $pos): void  {
         $bounds = Manager::FFA()->bounds();
         if ($bounds === null || $pos->getWorld()->getFolderName() !== $bounds['world']) {
             return;
@@ -488,8 +461,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    private function sendWall(Player $player, string $side, array $bounds, Position $pos): void
-    {
+    private function sendWall(Player $player, string $side, array $bounds, Position $pos): void  {
         $key = strtolower($player->getName());
         $blockTranslator = TypeConverter::getInstance()->getBlockTranslator();
         $glassId = $blockTranslator->internalIdToNetworkId(VanillaBlocks::STAINED_GLASS()->setColor(DyeColor::RED)->getStateId());
@@ -523,8 +495,7 @@ final class FFAListener implements Listener {
         }
     }
 
-    private function clearBarrier(Player $player): void
-    {
+    private function clearBarrier(Player $player): void  {
         $key = strtolower($player->getName());
         $blocks = $this->sentBarrier[$key] ?? [];
         if ($blocks === []) {

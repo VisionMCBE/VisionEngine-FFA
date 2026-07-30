@@ -11,14 +11,12 @@ use NayTools\NayTools;
 use pocketmine\inventory\CreativeCategory;
 use pocketmine\item\ToolTier;
 final class ItemRegistry {
-    public static function registerAll(): void
-    {
+    public static function registerAll(): void  {
         self::registerSwords();
         self::registerArmors();
     }
 
-    private static function registerSwords(): void
-    {
+    private static function registerSwords(): void  {
         $group = Manager::BRANDING()->itemText('creative_groups.swords', 'Épées {server_name}');
         foreach ([
             ['saphir_sword', 3600, 14],
@@ -34,8 +32,7 @@ final class ItemRegistry {
         }
     }
 
-    private static function registerArmors(): void
-    {
+    private static function registerArmors(): void  {
         $group = Manager::BRANDING()->itemText('creative_groups.armors', 'Armures {server_name}');
         $sets = [
             'farming' => [

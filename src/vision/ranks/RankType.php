@@ -20,8 +20,7 @@ enum RankType: string {
     case ADMINISTRATEUR = '§c';
     case CREATEURS = '§4';
 
-    public static function enumToString(self $type): string
-    {
+    public static function enumToString(self $type): string  {
         return match ($type) {
             self::MODERATEURPLUS => 'Moderateur+',
             self::SUPERMODERATEUR => 'Super-Moderateur',
@@ -30,8 +29,7 @@ enum RankType: string {
         };
     }
 
-    public static function fromString(string $value): ?self
-    {
+    public static function fromString(string $value): ?self  {
         foreach (self::cases() as $case) {
             if (strtolower($case->name) === strtolower($value) || strtolower(self::enumToString($case)) === strtolower($value)) {
                 return $case;

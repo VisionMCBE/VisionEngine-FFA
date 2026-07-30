@@ -15,14 +15,12 @@ use pocketmine\ServerProperties;
 use vision\Main;
 
 final class MaintenanceCommand extends Command {
-    public function __construct(private readonly Main $plugin)
-    {
+    public function __construct(private readonly Main $plugin)  {
         parent::__construct('maintenance', 'Active ou désactive la maintenance.', '/maintenance');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args): void
-    {
+    public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
         if (!$this->testPermission($sender)) {
             return;
         }

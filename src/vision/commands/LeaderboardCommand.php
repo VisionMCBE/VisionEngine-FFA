@@ -14,20 +14,15 @@ use pocketmine\player\Player;
 use vision\Main;
 
 final class LeaderboardCommand extends Command {
-    public function __construct()
-    {
+    public function __construct() {
         parent::__construct('leaderboard', 'Place les classements FFA.', '/leaderboard <kills|deaths|remove>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
+        $this->setPermissionMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args): void
-    {
+    public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
         if (!$sender instanceof Player) {
             $sender->sendMessage('Commande en jeu uniquement.');
-            return;
-        }
-        if (!$sender->getServer()->isOp($sender->getName())) {
-            $sender->sendMessage('§cCommande réservée aux OP.');
             return;
         }
 
@@ -37,12 +32,14 @@ final class LeaderboardCommand extends Command {
             $sender->sendMessage('§9Classement ' . ($type === 'kills' ? 'des kills' : 'des morts') . ' placé.');
             return;
         }
+
         if ($type === 'remove') {
             $sender->sendMessage(Manager::LEADERBOARD()->removeNearest($sender->getPosition())
                 ? '§9Classement le plus proche supprimé.'
                 : '§cAucun classement à moins de 5 blocs.');
             return;
         }
+
         $sender->sendMessage('§7Utilisation : §9/leaderboard <kills|deaths|remove>');
     }
 }

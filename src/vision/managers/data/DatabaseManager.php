@@ -12,13 +12,11 @@ final class DatabaseManager {
     private static ?PDO $database = null;
     private static ?Main $plugin = null;
 
-    public static function init(Main $plugin): void
-    {
+    public static function init(Main $plugin): void  {
         self::$plugin = $plugin;
     }
 
-    public static function get(): PDO
-    {
+    public static function get(): PDO  {
         if (self::$database !== null) {
             return self::$database;
         }
@@ -57,13 +55,11 @@ final class DatabaseManager {
         return self::$database;
     }
 
-    public static function isSqlite(PDO $database): bool
-    {
+    public static function isSqlite(PDO $database): bool  {
         return strtolower((string) $database->getAttribute(PDO::ATTR_DRIVER_NAME)) === 'sqlite';
     }
 
-    public static function close(): void
-    {
+    public static function close(): void  {
         self::$database = null;
     }
 }

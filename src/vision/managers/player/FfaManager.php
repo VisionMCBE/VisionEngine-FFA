@@ -23,13 +23,11 @@ final class FfaManager {
 
     private Config $config;
 
-    public function __construct(Main $plugin)
-    {
+    public function __construct(Main $plugin)  {
         $this->config = new Config($plugin->getDataFolder() . 'kitffa.json', Config::JSON, []);
     }
 
-    public function setPos(int $index, Position $position): void
-    {
+    public function setPos(int $index, Position $position): void  {
         $this->config->set('world', $position->getWorld()->getFolderName());
         $this->config->set('pos' . $index, [
             'x' => $position->getFloorX(),
@@ -39,8 +37,7 @@ final class FfaManager {
         $this->config->save();
     }
 
-    public function bounds(): ?array
-    {
+    public function bounds(): ?array  {
         $pos1 = $this->config->get('pos1');
         $pos2 = $this->config->get('pos2');
         $world = $this->config->get('world');
@@ -58,8 +55,7 @@ final class FfaManager {
         ];
     }
 
-    public function isInside(Position $position): bool
-    {
+    public function isInside(Position $position): bool  {
         $bounds = $this->bounds();
         if ($bounds === null || $position->getWorld()->getFolderName() !== $bounds['world']) {
             return false;
@@ -68,8 +64,7 @@ final class FfaManager {
             && $position->getFloorZ() >= $bounds['minZ'] && $position->getFloorZ() <= $bounds['maxZ'];
     }
 
-    public function giveKit(Player $player): void
-    {
+    public function giveKit(Player $player): void  {
         $parser = StringToItemParser::getInstance();
         $sword = $parser->parse('visionengine:visionne_sword') ?? VanillaItems::DIAMOND_SWORD();
         $sword->setCustomName(Manager::BRANDING()->itemText('kit_names.sword', '§r{primary}Épée FFA'));
@@ -106,8 +101,7 @@ final class FfaManager {
         }
     }
 
-    public function giveLobbyItems(Player $player, bool $playersHidden = false): void
-    {
+    public function giveLobbyItems(Player $player, bool $playersHidden = false): void  {
         $inventory = $player->getInventory();
         $inventory->clearAll();
         $player->getArmorInventory()->clearAll();
@@ -116,8 +110,7 @@ final class FfaManager {
         $inventory->setItem(5, $this->lobbyItem(VanillaItems::PAPER(), 'soon', '§r§8-'));
     }
 
-    public function updateVisibilityItem(Player $player, bool $playersHidden): void
-    {
+    public function updateVisibilityItem(Player $player, bool $playersHidden): void  {
         $dye = VanillaItems::DYE()->setColor($playersHidden ? DyeColor::RED : DyeColor::GREEN);
         $player->getInventory()->setItem(2, $this->lobbyItem(
             $dye,
@@ -126,25 +119,21 @@ final class FfaManager {
         ));
     }
 
-    public function hasLobbyItems(Player $player): bool
-    {
+    public function hasLobbyItems(Player $player): bool  {
         return $this->isLobbyItem($player->getInventory()->getItem(2))
             && $this->isLobbyItem($player->getInventory()->getItem(4))
             && $this->isLobbyItem($player->getInventory()->getItem(5));
     }
 
-    public function isLobbyItem(Item $item): bool
-    {
+    public function isLobbyItem(Item $item): bool  {
         return $item->getNamedTag()->getString(self::LOBBY_TAG, '') !== '';
     }
 
-    public function lobbyAction(Item $item): string
-    {
+    public function lobbyAction(Item $item): string  {
         return $item->getNamedTag()->getString(self::LOBBY_TAG, '');
     }
 
-    private function lobbyItem(Item $item, string $action, string $name): Item
-    {
+    private function lobbyItem(Item $item, string $action, string $name): Item  {
         $item->setCustomName($name);
         $item->getNamedTag()->setString(self::LOBBY_TAG, $action);
         return $item;

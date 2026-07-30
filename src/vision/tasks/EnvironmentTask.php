@@ -11,8 +11,7 @@ use pocketmine\world\World;
 use vision\Main;
 
 final class EnvironmentTask extends Task {
-    public function onRun(): void
-    {
+    public function onRun(): void  {
         $server = Main::getInstance()->getServer();
 
         foreach ($server->getWorldManager()->getWorlds() as $world) {

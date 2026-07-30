@@ -11,8 +11,7 @@ use pocketmine\scheduler\Task;
 use vision\Main;
 
 final class ScoreboardTask extends Task {
-    public function onRun(): void
-    {
+    public function onRun(): void  {
         foreach (Main::getInstance()->getServer()->getOnlinePlayers() as $player) {
             Manager::SCOREBOARD()->update($player);
         }

@@ -24,8 +24,7 @@ final class ScoreboardManager {
     /** @var array<string, int> */
     private array $lastLines = [];
 
-    public function update(Player $player): void
-    {
+    public function update(Player $player): void  {
         if (!Manager::SETTINGS()->hasScoreboard($player->getName())) {
             $this->remove($player);
             return;
@@ -58,8 +57,7 @@ final class ScoreboardManager {
         $this->clearAfter($player, $next);
     }
 
-    private function title(Player $player, string $title): void
-    {
+    private function title(Player $player, string $title): void  {
         $key = strtolower($player->getName());
         if (($this->titles[$key] ?? null) === $title) {
             return;
@@ -75,8 +73,7 @@ final class ScoreboardManager {
         $player->getNetworkSession()->sendDataPacket($packet);
     }
 
-    private function line(Player $player, int $line, string $content): void
-    {
+    private function line(Player $player, int $line, string $content): void  {
         $key = strtolower($player->getName());
         if (($this->lines[$key][$line] ?? null) === $content) {
             return;
@@ -95,8 +92,7 @@ final class ScoreboardManager {
         $player->getNetworkSession()->sendDataPacket($packet);
     }
 
-    private function clearAfter(Player $player, int $lastLine): void
-    {
+    private function clearAfter(Player $player, int $lastLine): void  {
         $key = strtolower($player->getName());
         $previousLastLine = $this->lastLines[$key] ?? 0;
         $this->lastLines[$key] = $lastLine;
@@ -122,8 +118,7 @@ final class ScoreboardManager {
         $player->getNetworkSession()->sendDataPacket($packet);
     }
 
-    public function remove(Player $player): void
-    {
+    public function remove(Player $player): void  {
         $key = strtolower($player->getName());
         if (!isset($this->titles[$key])) {
             return;

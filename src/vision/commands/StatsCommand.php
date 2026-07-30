@@ -13,14 +13,12 @@ use pocketmine\permission\DefaultPermissionNames;
 use vision\Main;
 
 final class StatsCommand extends Command {
-    public function __construct(private readonly Main $plugin)
-    {
+    public function __construct(private readonly Main $plugin)  {
         parent::__construct('stats', 'Affiche les stats FFA.', '/stats [joueur]');
         $this->setPermission(DefaultPermissionNames::GROUP_USER);
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args): void
-    {
+    public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
         if (!$this->testPermission($sender)) {
             return;
         }
