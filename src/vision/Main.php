@@ -70,21 +70,34 @@ final class Main extends PluginBase
 
         $map = $this->getServer()->getCommandMap();
         $this->removeNonOpVanillaCommands();
-        $map->register('vision', new KitFFACommand($this));
-        $map->register('vision', new LeaderboardCommand($this));
-        $map->register('vision', new MaintenanceCommand($this));
-        $map->register('vision', new RekitCommand($this));
-        $map->register('vision', new SettingsCommand($this));
-        $map->register('vision', new StatsCommand($this));
-        $map->register('vision', new XyzCommand($this));
+        foreach ([
+            new KitFFACommand($this),
+            new LeaderboardCommand($this),
+            new MaintenanceCommand($this),
+            new RekitCommand($this),
+            new SettingsCommand($this),
+            new StatsCommand($this),
+            new XyzCommand($this),
+        ] as $command) {
+            $map->register('vision', $command);
+        }
 
-        $this->getServer()->getPluginManager()->registerEvents(new FFAListener($this), $this);
-        $this->getServer()->getPluginManager()->registerEvents(Manager::ANTICHEAT(), $this);
-        $this->getServer()->getPluginManager()->registerEvents(new ResourcePackSendListener(), $this);
-        $this->getScheduler()->scheduleRepeatingTask(new ScoreboardTask(), 20);
-        $this->getScheduler()->scheduleRepeatingTask(new EnvironmentTask(), 20 * 10);
-        $this->getScheduler()->scheduleRepeatingTask(new LeaderboardTask(), 20 * 10);
-        $this->getScheduler()->scheduleRepeatingTask(new PackSendTask(), 1);
+        foreach ([
+            new FFAListener($this),
+            Manager::ANTICHEAT(),
+            new ResourcePackSendListener(),
+        ] as $listener) {
+            $this->getServer()->getPluginManager()->registerEvents($listener, $this);
+        }
+
+        foreach ([
+            [new ScoreboardTask(), 20],
+            [new EnvironmentTask(), 20 * 10],
+            [new LeaderboardTask(), 20 * 10],
+            [new PackSendTask(), 1],
+        ] as [$task, $period]) {
+            $this->getScheduler()->scheduleRepeatingTask($task, $period);
+        }
     }
 
     public function onDisable(): void
