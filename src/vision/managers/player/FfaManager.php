@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace vision\managers\player;
 
+use vision\managers\Manager;
+
 use pocketmine\block\utils\DyeColor;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\enchantment\VanillaEnchantments;
@@ -22,7 +24,7 @@ final class FfaManager
 
     private Config $config;
 
-    public function __construct(private readonly Main $plugin)
+    public function __construct(Main $plugin)
     {
         $this->config = new Config($plugin->getDataFolder() . 'kitffa.json', Config::JSON, []);
     }
@@ -71,7 +73,7 @@ final class FfaManager
     {
         $parser = StringToItemParser::getInstance();
         $sword = $parser->parse('visionengine:visionne_sword') ?? VanillaItems::DIAMOND_SWORD();
-        $sword->setCustomName($this->plugin->branding()->itemText('kit_names.sword', '§r{primary}Épée FFA'));
+        $sword->setCustomName(Manager::BRANDING()->itemText('kit_names.sword', '§r{primary}Épée FFA'));
         $sword->addEnchantment(new EnchantmentInstance(VanillaEnchantments::SHARPNESS(), 5));
 
         $armorIds = [
@@ -86,7 +88,7 @@ final class FfaManager
             if ($item === null) {
                 continue;
             }
-            $item->setCustomName($this->plugin->branding()->itemText('kit_names.' . $slot, '§r{primary}Armure FFA'));
+            $item->setCustomName(Manager::BRANDING()->itemText('kit_names.' . $slot, '§r{primary}Armure FFA'));
             $item->addEnchantment(new EnchantmentInstance(VanillaEnchantments::PROTECTION(), 4));
             $armor[] = $item;
         }
@@ -111,7 +113,7 @@ final class FfaManager
         $inventory->clearAll();
         $player->getArmorInventory()->clearAll();
         $this->updateVisibilityItem($player, $playersHidden);
-        $inventory->setItem(4, $this->lobbyItem(VanillaItems::COMPASS(), 'settings', $this->plugin->branding()->format('§r{primary}Paramètres')));
+        $inventory->setItem(4, $this->lobbyItem(VanillaItems::COMPASS(), 'settings', Manager::BRANDING()->format('§r{primary}Paramètres')));
         $inventory->setItem(5, $this->lobbyItem(VanillaItems::PAPER(), 'soon', '§r§8-'));
     }
 

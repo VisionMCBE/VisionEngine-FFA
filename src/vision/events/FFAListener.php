@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace vision\events;
 
+use vision\managers\Manager;
+
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\utils\DyeColor;
 use pocketmine\event\block\BlockBreakEvent;
@@ -95,18 +97,18 @@ final class FFAListener implements Listener
         $this->names[$key] = $player->getName();
         $this->combatUntil[$key] = 0;
         $this->hideLobbyPlayers[$key] = false;
-        $this->insideFfa[$key] = $this->plugin->ffa()->isInside($player->getPosition());
+        $this->insideFfa[$key] = Manager::FFA()->isInside($player->getPosition());
         XyzCommand::applyCoordinates($player, (bool) $this->plugin->getConfig()->getNested('coordinates.enabled', false));
         if ($this->insideFfa[$key]) {
-            $this->plugin->ffa()->giveLobbyItems($player);
+            Manager::FFA()->giveLobbyItems($player);
         }
-        $rank = $this->plugin->ranks()->getPlayerRank($player->getName());
-        $player->setNameTag($rank->getColor() . $rank->getName() . $this->plugin->branding()->format(' {secondary}') . $player->getName());
-        $this->plugin->getServer()->broadcastTip($this->plugin->branding()->format('{success}+ ') . $player->getName() . $this->plugin->branding()->format(' {success}+'));
+        $rank = Manager::RANK()->getPlayerRank($player->getName());
+        $player->setNameTag($rank->getColor() . $rank->getName() . Manager::BRANDING()->format(' {secondary}') . $player->getName());
+        $this->plugin->getServer()->broadcastTip(Manager::BRANDING()->format('{success}+ ') . $player->getName() . Manager::BRANDING()->format(' {success}+'));
 
         if ($isFirstJoin) {
             $number = count(glob($this->plugin->getServer()->getDataPath() . 'players' . DIRECTORY_SEPARATOR . '*') ?: []) + 1;
-            $this->plugin->getServer()->broadcastMessage($this->plugin->branding()->format('{prefix}{secondary}Bienvenue à {primary}') . $player->getName() . $this->plugin->branding()->format(' {secondary}sur {primary}{server_name}{secondary} ! Souhaitez-lui la bienvenue avec {primary}/bvn {dark}(#') . $number . ')');
+            $this->plugin->getServer()->broadcastMessage(Manager::BRANDING()->format('{prefix}{secondary}Bienvenue à {primary}') . $player->getName() . Manager::BRANDING()->format(' {secondary}sur {primary}{server_name}{secondary} ! Souhaitez-lui la bienvenue avec {primary}/bvn {dark}(#') . $number . ')');
         }
         $this->refreshAllVisibility();
     }
@@ -114,7 +116,7 @@ final class FFAListener implements Listener
     public function onQuit(PlayerQuitEvent $event): void
     {
         $event->setQuitMessage('');
-        $this->plugin->scoreboards()->remove($event->getPlayer());
+        Manager::SCOREBOARD()->remove($event->getPlayer());
         $key = strtolower($event->getPlayer()->getName());
         unset($this->combatUntil[$key], $this->insideFfa[$key], $this->hideLobbyPlayers[$key], $this->sentBarrier[$key], $this->combatOpponent[$key], $this->names[$key]);
         foreach ($this->combatOpponent as $playerKey => $opponentKey) {
@@ -122,13 +124,13 @@ final class FFAListener implements Listener
                 unset($this->combatOpponent[$playerKey]);
             }
         }
-        $this->plugin->getServer()->broadcastTip($this->plugin->branding()->format('{error}- ') . $event->getPlayer()->getName() . $this->plugin->branding()->format(' {error}-'));
+        $this->plugin->getServer()->broadcastTip(Manager::BRANDING()->format('{error}- ') . $event->getPlayer()->getName() . Manager::BRANDING()->format(' {error}-'));
         $this->refreshAllVisibility();
     }
 
     public function onDamage(EntityDamageByEntityEvent $event): void
     {
-        $this->plugin->knockback()->apply($event);
+        Manager::KNOCKBACK()->apply($event);
 
         $victim = $event->getEntity();
         $damager = $event->getDamager();
@@ -136,7 +138,7 @@ final class FFAListener implements Listener
             return;
         }
 
-        if ($this->plugin->ffa()->isInside($victim->getPosition()) || $this->plugin->ffa()->isInside($damager->getPosition())) {
+        if (Manager::FFA()->isInside($victim->getPosition()) || Manager::FFA()->isInside($damager->getPosition())) {
             $event->cancel();
             return;
         }
@@ -147,7 +149,7 @@ final class FFAListener implements Listener
         $damagerOpponent = $this->activeOpponent($damager);
         if (($victimOpponent !== null && $victimOpponent !== $damagerKey) || ($damagerOpponent !== null && $damagerOpponent !== $victimKey)) {
             $event->cancel();
-            $damager->sendMessage($this->plugin->branding()->format('{prefix}{error}Ce joueur est déjà en combat avec quelqu’un d’autre.'));
+            $damager->sendMessage(Manager::BRANDING()->format('{prefix}{error}Ce joueur est déjà en combat avec quelqu’un d’autre.'));
             return;
         }
 
@@ -156,16 +158,16 @@ final class FFAListener implements Listener
         $this->combatUntil[$damagerKey] = $until;
         $this->combatOpponent[$victimKey] = $damagerKey;
         $this->combatOpponent[$damagerKey] = $victimKey;
-        $this->plugin->cooldowns()->add($victim->getName(), 'combat', self::COMBAT_SECONDS);
-        $this->plugin->cooldowns()->add($damager->getName(), 'combat', self::COMBAT_SECONDS);
+        Manager::COOLDOWN()->add($victim->getName(), 'combat', self::COMBAT_SECONDS);
+        Manager::COOLDOWN()->add($damager->getName(), 'combat', self::COMBAT_SECONDS);
         $this->refreshAllVisibility();
     }
 
     public function onChat(PlayerChatEvent $event): void
     {
         $player = $event->getPlayer();
-        $rank = $this->plugin->ranks()->getPlayerRank($player->getName());
-        $brand = $this->plugin->branding();
+        $rank = Manager::RANK()->getPlayerRank($player->getName());
+        $brand = Manager::BRANDING();
         $format = $brand->format('{dark}[', []) . $rank->getColor() . $rank->getName() . $brand->format('{dark}] ')
             . $brand->format('{secondary}') . $player->getName()
             . $brand->format(' {dark}» {text}');
@@ -186,7 +188,7 @@ final class FFAListener implements Listener
         $event->setDrops([]);
         $event->setXpDropAmount(0);
         $event->setDeathMessage('');
-        $this->plugin->stats()->addDeath($victim->getName());
+        Manager::STATS()->addDeath($victim->getName());
         $cause = $victim->getLastDamageCause();
         if ($cause instanceof EntityDamageByEntityEvent && $cause->getDamager() instanceof Player) {
             $killer = $cause->getDamager();
@@ -194,10 +196,10 @@ final class FFAListener implements Listener
                 $message = $this->killMessage($killer, $victim);
                 $this->endCombat($killer);
                 $this->endCombat($victim);
-                $this->plugin->stats()->addKill($killer->getName());
+                Manager::STATS()->addKill($killer->getName());
                 $this->plugin->getServer()->broadcastMessage($message);
-                $this->plugin->ffa()->giveKit($killer);
-                $killer->sendTip($this->plugin->branding()->format('{success}Kit refill.'));
+                Manager::FFA()->giveKit($killer);
+                $killer->sendTip(Manager::BRANDING()->format('{success}Kit refill.'));
             }
         }
     }
@@ -209,19 +211,19 @@ final class FFAListener implements Listener
         if (!$item instanceof GoldenApple && !$item instanceof GoldenAppleEnchanted) {
             return;
         }
-        if ($this->plugin->cooldowns()->has($player->getName(), 'gapple')) {
+        if (Manager::COOLDOWN()->has($player->getName(), 'gapple')) {
             $event->cancel();
-            $player->sendTip($this->plugin->branding()->format('{error}Pomme disponible dans ') . $this->plugin->cooldowns()->remaining($player->getName(), 'gapple') . 's.');
+            $player->sendTip(Manager::BRANDING()->format('{error}Pomme disponible dans ') . Manager::COOLDOWN()->remaining($player->getName(), 'gapple') . 's.');
             return;
         }
-        $this->plugin->cooldowns()->add($player->getName(), 'gapple', 15);
+        Manager::COOLDOWN()->add($player->getName(), 'gapple', 15);
     }
 
     public function onUse(PlayerItemUseEvent $event): void
     {
         $item = $event->getItem();
         $player = $event->getPlayer();
-        if ($item instanceof SplashPotionItem && $this->plugin->settings()->hasGuidedPotions($player->getName())) {
+        if ($item instanceof SplashPotionItem && Manager::SETTINGS()->hasGuidedPotions($player->getName())) {
             $event->cancel();
             $beforeUse = $player->getInventory()->getItemInHand();
             if (!$beforeUse->equalsExact($item)) {
@@ -235,20 +237,20 @@ final class FFAListener implements Listener
             return;
         }
 
-        if (!$this->plugin->ffa()->isLobbyItem($item)) {
+        if (!Manager::FFA()->isLobbyItem($item)) {
             return;
         }
         $event->cancel();
-        $action = $this->plugin->ffa()->lobbyAction($item);
+        $action = Manager::FFA()->lobbyAction($item);
         if ($action === 'settings') {
             (new \vision\commands\SettingsCommand($this->plugin))->open($event->getPlayer());
             return;
         }
-        if ($action === 'players_visibility' && $this->plugin->ffa()->isInside($player->getPosition())) {
+        if ($action === 'players_visibility' && Manager::FFA()->isInside($player->getPosition())) {
             $key = strtolower($player->getName());
             $hidden = !($this->hideLobbyPlayers[$key] ?? false);
             $this->hideLobbyPlayers[$key] = $hidden;
-            $this->plugin->ffa()->updateVisibilityItem($player, $hidden);
+            Manager::FFA()->updateVisibilityItem($player, $hidden);
             $this->refreshVisibility($player);
             $player->sendTip($hidden ? '§cJoueurs cachés.' : '§aJoueurs affichés.');
         }
@@ -262,7 +264,7 @@ final class FFAListener implements Listener
     public function onInventoryTransaction(InventoryTransactionEvent $event): void
     {
         foreach ($event->getTransaction()->getActions() as $action) {
-            if ($this->plugin->ffa()->isLobbyItem($action->getSourceItem()) || $this->plugin->ffa()->isLobbyItem($action->getTargetItem())) {
+            if (Manager::FFA()->isLobbyItem($action->getSourceItem()) || Manager::FFA()->isLobbyItem($action->getTargetItem())) {
                 $event->cancel();
                 return;
             }
@@ -273,19 +275,19 @@ final class FFAListener implements Listener
     {
         $player = $event->getPlayer();
         $key = strtolower($player->getName());
-        $fromInside = $this->plugin->ffa()->isInside($event->getFrom());
-        $toInside = $this->plugin->ffa()->isInside($event->getTo());
+        $fromInside = Manager::FFA()->isInside($event->getFrom());
+        $toInside = Manager::FFA()->isInside($event->getTo());
 
         if (!$fromInside && $toInside && $this->isInCombat($player)) {
             $event->cancel();
-            $player->sendTip($this->plugin->branding()->format('{error}Vous ne pouvez pas rentrer en KitFFA en combat.'));
+            $player->sendTip(Manager::BRANDING()->format('{error}Vous ne pouvez pas rentrer en KitFFA en combat.'));
             $this->sendBarrierToward($player, $event->getTo());
             return;
         }
 
-        if ($toInside && !$this->plugin->ffa()->hasLobbyItems($player)) {
+        if ($toInside && !Manager::FFA()->hasLobbyItems($player)) {
             $player->getEffects()->clear();
-            $this->plugin->ffa()->giveLobbyItems($player, $this->hideLobbyPlayers[$key] ?? false);
+            Manager::FFA()->giveLobbyItems($player, $this->hideLobbyPlayers[$key] ?? false);
         }
 
         if (!$toInside && $this->isInCombat($player)) {
@@ -294,12 +296,12 @@ final class FFAListener implements Listener
 
         if (($this->insideFfa[$key] ?? false) && !$toInside) {
             $this->hideLobbyPlayers[$key] = false;
-            $this->plugin->ffa()->giveKit($player);
-            $player->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Kit FFA équipé.'));
+            Manager::FFA()->giveKit($player);
+            $player->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Kit FFA équipé.'));
         } elseif (!($this->insideFfa[$key] ?? false) && $toInside) {
             $this->hideLobbyPlayers[$key] = false;
             $player->getEffects()->clear();
-            $this->plugin->ffa()->giveLobbyItems($player);
+            Manager::FFA()->giveLobbyItems($player);
         }
         $this->insideFfa[$key] = $toInside;
 
@@ -321,12 +323,12 @@ final class FFAListener implements Listener
         if (!$owner instanceof Player || !$projectile instanceof \pocketmine\entity\projectile\EnderPearl) {
             return;
         }
-        if ($this->plugin->cooldowns()->has($owner->getName(), 'pearl')) {
+        if (Manager::COOLDOWN()->has($owner->getName(), 'pearl')) {
             $event->cancel();
-            $owner->sendMessage($this->plugin->branding()->format('{prefix}{error}Enderpearl disponible dans ') . $this->plugin->cooldowns()->remaining($owner->getName(), 'pearl') . 's.');
+            $owner->sendMessage(Manager::BRANDING()->format('{prefix}{error}Enderpearl disponible dans ') . Manager::COOLDOWN()->remaining($owner->getName(), 'pearl') . 's.');
             return;
         }
-        $this->plugin->cooldowns()->add($owner->getName(), 'pearl', 15);
+        Manager::COOLDOWN()->add($owner->getName(), 'pearl', 15);
     }
 
     private function isInCombat(Player $player): bool
@@ -340,7 +342,7 @@ final class FFAListener implements Listener
         $opponent = $this->combatOpponent[$key] ?? null;
         $this->combatUntil[$key] = 0;
         unset($this->combatOpponent[$key]);
-        $this->plugin->cooldowns()->remove($player->getName(), 'combat');
+        Manager::COOLDOWN()->remove($player->getName(), 'combat');
         $this->clearBarrier($player);
 
         if ($opponent !== null && (($this->combatOpponent[$opponent] ?? null) === $key)) {
@@ -348,7 +350,7 @@ final class FFAListener implements Listener
             $this->combatUntil[$opponent] = 0;
             $opponentPlayer = $this->plugin->getServer()->getPlayerExact($this->names[$opponent] ?? $opponent);
             if ($opponentPlayer instanceof Player) {
-                $this->plugin->cooldowns()->remove($opponentPlayer->getName(), 'combat');
+                Manager::COOLDOWN()->remove($opponentPlayer->getName(), 'combat');
                 $this->clearBarrier($opponentPlayer);
             }
         }
@@ -380,7 +382,7 @@ final class FFAListener implements Listener
     {
         $viewerKey = strtolower($viewer->getName());
         $hideLobbyPlayers = ($this->insideFfa[$viewerKey] ?? false) && ($this->hideLobbyPlayers[$viewerKey] ?? false);
-        $enabled = $this->plugin->settings()->hasCombatVisibility($viewer->getName());
+        $enabled = Manager::SETTINGS()->hasCombatVisibility($viewer->getName());
         $opponentKey = $enabled ? $this->activeOpponent($viewer) : null;
 
         foreach ($this->plugin->getServer()->getOnlinePlayers() as $target) {
@@ -423,7 +425,7 @@ final class FFAListener implements Listener
 
     private function addPotionParticle(Player $player): void
     {
-        $color = $this->plugin->settings()->getPotionParticleColor($player->getName());
+        $color = Manager::SETTINGS()->getPotionParticleColor($player->getName());
         $particle = $color === null
             ? new PotionSplashParticle(PotionSplashParticle::DEFAULT_COLOR())
             : new PotionSplashParticle($color);
@@ -468,7 +470,7 @@ final class FFAListener implements Listener
 
     private function sendCombatWallToward(Player $player, Position $pos): void
     {
-        $bounds = $this->plugin->ffa()->bounds();
+        $bounds = Manager::FFA()->bounds();
         if ($bounds === null || $pos->getWorld()->getFolderName() !== $bounds['world']) {
             return;
         }

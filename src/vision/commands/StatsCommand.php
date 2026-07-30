@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
+
+use vision\managers\Manager;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\permission\DefaultPermissionNames;
@@ -24,9 +27,9 @@ final class StatsCommand extends Command
         }
 
         $target = (string) ($args[0] ?? $sender->getName());
-        $stats = $this->plugin->stats()->get($target);
-        $kd = number_format($this->plugin->stats()->kd($target), 2);
-        $brand = $this->plugin->branding();
+        $stats = Manager::STATS()->get($target);
+        $kd = number_format(Manager::STATS()->kd($target), 2);
+        $brand = Manager::BRANDING();
 
         $sender->sendMessage($brand->format('{prefix}{primary}Stats FFA de {text}') . $target);
         $sender->sendMessage($brand->format('{secondary}Kills : {primary}') . $stats['kills']);

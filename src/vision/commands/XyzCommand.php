@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
+
+use vision\managers\Manager;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
@@ -28,7 +31,7 @@ final class XyzCommand extends Command
 
         $mode = strtolower((string) ($args[0] ?? ''));
         if ($mode !== 'on' && $mode !== 'off') {
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Utilisation: {primary}/xyz on{secondary}, {primary}/xyz off'));
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Utilisation: {primary}/xyz on{secondary}, {primary}/xyz off'));
             return;
         }
 
@@ -39,7 +42,7 @@ final class XyzCommand extends Command
         foreach ($this->plugin->getServer()->getOnlinePlayers() as $player) {
             self::applyCoordinates($player, $enabled);
         }
-        $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? $this->plugin->branding()->format('{success}activées') : $this->plugin->branding()->format('{error}désactivées')));
+        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? Manager::BRANDING()->format('{success}activées') : Manager::BRANDING()->format('{error}désactivées')));
     }
 
     public static function applyCoordinates(Player $player, bool $show): void

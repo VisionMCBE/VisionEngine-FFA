@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
+
+use vision\managers\Manager;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\permission\DefaultPermissions;
@@ -25,33 +28,33 @@ final class KitFFACommand extends Command
             return;
         }
         if (!$sender->getServer()->isOp($sender->getName())) {
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{error}Commande réservée aux OP.'));
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
             return;
         }
 
         $sub = strtolower((string) ($args[0] ?? ''));
         if ($sub === 'pos1' || $sub === 'pos2') {
-            $this->plugin->ffa()->setPos($sub === 'pos1' ? 1 : 2, $sender->getPosition());
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Position ') . strtoupper($sub) . $this->plugin->branding()->format(' enregistrée.'));
+            Manager::FFA()->setPos($sub === 'pos1' ? 1 : 2, $sender->getPosition());
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Position ') . strtoupper($sub) . Manager::BRANDING()->format(' enregistrée.'));
             return;
         }
 
         if ($sub === 'givekit') {
-            $this->plugin->ffa()->giveKit($sender);
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Kit FFA donné.'));
+            Manager::FFA()->giveKit($sender);
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Kit FFA donné.'));
             return;
         }
 
         if ($sub === 'info') {
-            $bounds = $this->plugin->ffa()->bounds();
+            $bounds = Manager::FFA()->bounds();
             if ($bounds === null) {
-                $sender->sendMessage($this->plugin->branding()->format('{prefix}{error}Zone KitFFA incomplète.'));
+                $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Zone KitFFA incomplète.'));
                 return;
             }
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Zone KitFFA: {primary}') . $bounds['world'] . $this->plugin->branding()->format(' {secondary}X ') . $bounds['minX'] . ' -> ' . $bounds['maxX'] . $this->plugin->branding()->format(' {secondary}Z ') . $bounds['minZ'] . ' -> ' . $bounds['maxZ']);
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Zone KitFFA: {primary}') . $bounds['world'] . Manager::BRANDING()->format(' {secondary}X ') . $bounds['minX'] . ' -> ' . $bounds['maxX'] . Manager::BRANDING()->format(' {secondary}Z ') . $bounds['minZ'] . ' -> ' . $bounds['maxZ']);
             return;
         }
 
-        $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Utilisation: {primary}/kitffa pos1{secondary}, {primary}/kitffa pos2{secondary}, {primary}/kitffa info{secondary}, {primary}/kitffa givekit'));
+        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Utilisation: {primary}/kitffa pos1{secondary}, {primary}/kitffa pos2{secondary}, {primary}/kitffa info{secondary}, {primary}/kitffa givekit'));
     }
 }

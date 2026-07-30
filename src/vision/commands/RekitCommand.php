@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
+
+use vision\managers\Manager;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\permission\DefaultPermissionNames;
@@ -27,12 +30,12 @@ final class RekitCommand extends Command
             $sender->sendMessage('Commande en jeu uniquement.');
             return;
         }
-        if ($this->plugin->ffa()->isInside($sender->getPosition())) {
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{error}Sors de la zone KitFFA pour prendre ton kit.'));
+        if (Manager::FFA()->isInside($sender->getPosition())) {
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Sors de la zone KitFFA pour prendre ton kit.'));
             return;
         }
 
-        $this->plugin->ffa()->giveKit($sender);
-        $sender->sendMessage($this->plugin->branding()->format('{prefix}{secondary}Kit FFA récupéré.'));
+        Manager::FFA()->giveKit($sender);
+        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Kit FFA récupéré.'));
     }
 }

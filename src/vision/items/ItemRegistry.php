@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace vision\items;
 
+
+use vision\managers\Manager;
+
 use NayTools\NayTools;
 use pocketmine\inventory\CreativeCategory;
 use pocketmine\item\ToolTier;
-use vision\Main;
-
 final class ItemRegistry
 {
     public static function registerAll(): void
@@ -19,7 +20,7 @@ final class ItemRegistry
 
     private static function registerSwords(): void
     {
-        $group = Main::getInstance()->branding()->itemText('creative_groups.swords', 'Épées {server_name}');
+        $group = Manager::BRANDING()->itemText('creative_groups.swords', 'Épées {server_name}');
         foreach ([
             ['saphir_sword', 3600, 14],
             ['platine_sword', 4400, 18],
@@ -36,7 +37,7 @@ final class ItemRegistry
 
     private static function registerArmors(): void
     {
-        $group = Main::getInstance()->branding()->itemText('creative_groups.armors', 'Armures {server_name}');
+        $group = Manager::BRANDING()->itemText('creative_groups.armors', 'Armures {server_name}');
         $sets = [
             'farming' => [
                 ['helmet', 2, 900],

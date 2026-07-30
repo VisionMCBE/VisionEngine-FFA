@@ -6,17 +6,15 @@ namespace vision\services;
 
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
-use vision\Main;
 
 final class PackSendEntry
 {
     /** @var ClientboundPacket[] */
     private array $packets = [];
-    private int $sendInterval = Main::DEFAULT_PACKET_SEND_INTERVAL;
 
     public function __construct(
         private readonly NetworkSession $session,
-        private readonly int $queueKey
+        private readonly int $sendInterval
     ) {}
 
     public function addPacket(ClientboundPacket $packet): void
@@ -24,23 +22,22 @@ final class PackSendEntry
         $this->packets[] = $packet;
     }
 
-    public function tick(int $tick): void
+    public function tick(int $tick, int $queueKey): bool
     {
         if (!$this->session->isConnected()) {
-            unset(Main::$packSendQueue[$this->queueKey]);
-            return;
+            return false;
         }
 
-        if ((($tick + $this->queueKey) % $this->sendInterval) !== 0) {
-            return;
+        if ((($tick + $queueKey) % $this->sendInterval) !== 0) {
+            return true;
         }
 
         $next = array_shift($this->packets);
         if ($next instanceof ClientboundPacket) {
             $this->session->sendDataPacket($next);
-            return;
+            return true;
         }
 
-        unset(Main::$packSendQueue[$this->queueKey]);
+        return false;
     }
 }

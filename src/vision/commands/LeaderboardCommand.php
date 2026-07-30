@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
+
+use vision\managers\Manager;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\permission\DefaultPermissions;
@@ -31,12 +34,12 @@ final class LeaderboardCommand extends Command
 
         $type = strtolower((string) ($args[0] ?? ''));
         if ($type === 'kills' || $type === 'deaths') {
-            $this->plugin->leaderboards()->place($type, $sender);
+            Manager::LEADERBOARD()->place($type, $sender);
             $sender->sendMessage('§9Classement ' . ($type === 'kills' ? 'des kills' : 'des morts') . ' placé.');
             return;
         }
         if ($type === 'remove') {
-            $sender->sendMessage($this->plugin->leaderboards()->removeNearest($sender->getPosition())
+            $sender->sendMessage(Manager::LEADERBOARD()->removeNearest($sender->getPosition())
                 ? '§9Classement le plus proche supprimé.'
                 : '§cAucun classement à moins de 5 blocs.');
             return;

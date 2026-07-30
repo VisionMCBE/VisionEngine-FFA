@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
+
+use vision\managers\Manager;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\permission\DefaultPermissions;
@@ -25,7 +28,7 @@ final class MaintenanceCommand extends Command
             return;
         }
         if ($sender instanceof Player && !$sender->getServer()->isOp($sender->getName())) {
-            $sender->sendMessage($this->plugin->branding()->format('{prefix}{error}Commande réservée aux OP.'));
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
             return;
         }
 
@@ -36,14 +39,14 @@ final class MaintenanceCommand extends Command
         if ($enabled) {
             foreach ($server->getOnlinePlayers() as $player) {
                 if (!$server->isOp($player->getName())) {
-                    $player->kick($this->plugin->branding()->format('{error}Le serveur est en maintenance.'));
+                    $player->kick(Manager::BRANDING()->format('{error}Le serveur est en maintenance.'));
                 }
             }
-            $server->broadcastMessage($this->plugin->branding()->format('{prefix}{error}Maintenance activée.'));
+            $server->broadcastMessage(Manager::BRANDING()->format('{prefix}{error}Maintenance activée.'));
             return;
         }
 
-        $message = $this->plugin->branding()->format('{prefix}{success}Maintenance désactivée.');
+        $message = Manager::BRANDING()->format('{prefix}{success}Maintenance désactivée.');
         if ($sender instanceof Player) {
             $sender->sendMessage($message);
         } else {

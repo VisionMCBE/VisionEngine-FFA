@@ -6,14 +6,13 @@ namespace vision\tasks;
 
 use pocketmine\scheduler\Task;
 use vision\Main;
+use vision\managers\Manager;
 
 final class PackSendTask extends Task
 {
     public function onRun(): void
     {
         $tick = Main::getInstance()->getServer()->getTick();
-        foreach (Main::$packSendQueue as $entry) {
-            $entry->tick($tick);
-        }
+        Manager::PACK()->tick($tick);
     }
 }

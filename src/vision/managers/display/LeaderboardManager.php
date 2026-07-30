@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\managers\display;
 
+
+use vision\managers\Manager;
+
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
 use pocketmine\world\particle\FloatingTextParticle;
@@ -85,7 +88,7 @@ final class LeaderboardManager
 
         $title = $type === 'kills' ? '§l§9TOP KILLS' : '§l§9TOP MORTS';
         $lines = [];
-        foreach ($this->plugin->stats()->top($type) as $index => $row) {
+        foreach (Manager::STATS()->top($type) as $index => $row) {
             $rank = $index + 1;
             $color = $rank === 1 ? '§6' : ($rank === 2 ? '§7' : ($rank === 3 ? '§c' : '§f'));
             $lines[] = $color . $rank . '. §f' . $row['name'] . ' §8- §9' . $row['value'];

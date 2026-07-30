@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace vision\managers\display;
 
+
+use vision\managers\Manager;
+
 use pocketmine\network\mcpe\protocol\SetDisplayObjectivePacket;
 use pocketmine\network\mcpe\protocol\RemoveObjectivePacket;
 use pocketmine\network\mcpe\protocol\SetScorePacket;
 use pocketmine\network\mcpe\protocol\types\ScorePacketEntry;
 use pocketmine\player\Player;
-use vision\Main;
-
 final class ScoreboardManager
 {
     private const MAX_LINES = 15;
@@ -26,16 +27,16 @@ final class ScoreboardManager
 
     public function update(Player $player): void
     {
-        if (!Main::getInstance()->settings()->hasScoreboard($player->getName())) {
+        if (!Manager::SETTINGS()->hasScoreboard($player->getName())) {
             $this->remove($player);
             return;
         }
 
-        $rank = Main::getInstance()->ranks()->getPlayerRank($player->getName());
-        $combat = Main::getInstance()->cooldowns()->remaining($player->getName(), 'combat');
-        $pearl = Main::getInstance()->cooldowns()->remaining($player->getName(), 'pearl');
-        $gapple = Main::getInstance()->cooldowns()->remaining($player->getName(), 'gapple');
-        $brand = Main::getInstance()->branding();
+        $rank = Manager::RANK()->getPlayerRank($player->getName());
+        $combat = Manager::COOLDOWN()->remaining($player->getName(), 'combat');
+        $pearl = Manager::COOLDOWN()->remaining($player->getName(), 'pearl');
+        $gapple = Manager::COOLDOWN()->remaining($player->getName(), 'gapple');
+        $brand = Manager::BRANDING();
 
         $this->title($player, $combat > 0 ? $brand->combatTitle() : $brand->scoreboardTitle());
         $this->line($player, 1, $brand->separator());

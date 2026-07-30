@@ -16,6 +16,7 @@ use vision\managers\player\CooldownManager;
 use vision\managers\player\FfaManager;
 use vision\managers\player\KnockbackManager;
 use vision\managers\player\RankManager;
+use vision\managers\resource\PackManager;
 use vision\managers\security\AntiCheatManager;
 
 /**
@@ -29,6 +30,7 @@ use vision\managers\security\AntiCheatManager;
  * @method static LeaderboardManager LEADERBOARD()
  * @method static FfaManager FFA()
  * @method static AntiCheatManager ANTICHEAT()
+ * @method static PackManager PACK()
  */
 final class Manager
 {
@@ -49,7 +51,8 @@ final class Manager
         self::$registrants['STATS'] = new StatsManager($plugin);
         self::$registrants['LEADERBOARD'] = new LeaderboardManager($plugin);
         self::$registrants['FFA'] = new FfaManager($plugin);
-        self::$registrants['ANTICHEAT'] = new AntiCheatManager($plugin);
+        self::$registrants['ANTICHEAT'] = new AntiCheatManager();
+        self::$registrants['PACK'] = new PackManager($plugin);
 
         foreach (array_keys(self::$registrants) as $name) {
             $plugin->getLogger()->notice('[MANAGER] Chargement du Manager ' . $name);
@@ -58,6 +61,7 @@ final class Manager
 
     public static function shutdown(): void
     {
+        self::PACK()->clear();
         DatabaseManager::close();
         self::$registrants = [];
     }

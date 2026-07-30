@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace vision\managers\security;
 
+
+use vision\managers\Manager;
+
 use pocketmine\block\Ladder;
 use pocketmine\block\Liquid;
 use pocketmine\block\utils\Fallable;
@@ -19,7 +22,6 @@ use pocketmine\math\AxisAlignedBB;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
 use pocketmine\Server;
-use vision\Main;
 use vision\ranks\RankType;
 
 final class AntiCheatManager implements Listener
@@ -54,7 +56,7 @@ final class AntiCheatManager implements Listener
 
     private static ?self $instance = null;
 
-    public function __construct(private readonly Main $plugin)
+    public function __construct()
     {
         self::$instance = $this;
     }
@@ -339,11 +341,11 @@ final class AntiCheatManager implements Listener
 
         if ($kick) {
             $entry['vl'] = 0.0;
-            Server::getInstance()->broadcastMessage($this->plugin->branding()->format('{ac_prefix}{error}{player} a été kick par l\'anticheat ({text}{check}{error}).', [
+            Server::getInstance()->broadcastMessage(Manager::BRANDING()->format('{ac_prefix}{error}{player} a été kick par l\'anticheat ({text}{check}{error}).', [
                 '{player}' => $player->getName(),
                 '{check}' => $check,
             ]));
-            $player->kick($this->plugin->branding()->format('{error}{server_name}AC: comportement invalide ({check}).', ['{check}' => $check]));
+            $player->kick(Manager::BRANDING()->format('{error}{server_name}AC: comportement invalide ({check}).', ['{check}' => $check]));
         }
 
         $this->violations[$key][$check] = $entry;
@@ -356,16 +358,16 @@ final class AntiCheatManager implements Listener
 
     private function notifyStaff(Player $player, string $check, string $details, int $vl, bool $kick): void
     {
-        $moderatorId = $this->plugin->ranks()->rank(RankType::MODERATEUR)->getId();
-        $message = $this->plugin->branding()->anticheatPrefix()
-            . ($kick ? $this->plugin->branding()->format('{error}Kick {secondary}') : $this->plugin->branding()->format('{warning}Alerte {secondary}'))
+        $moderatorId = Manager::RANK()->rank(RankType::MODERATEUR)->getId();
+        $message = Manager::BRANDING()->anticheatPrefix()
+            . ($kick ? Manager::BRANDING()->format('{error}Kick {secondary}') : Manager::BRANDING()->format('{warning}Alerte {secondary}'))
             . $player->getName()
-            . $this->plugin->branding()->format(' {dark}| {text}') . $check
-            . $this->plugin->branding()->format(' {dark}| {primary}') . $vl . '/' . self::KICK_THRESHOLD
-            . $this->plugin->branding()->format(' {dark}| {secondary}') . $details;
+            . Manager::BRANDING()->format(' {dark}| {text}') . $check
+            . Manager::BRANDING()->format(' {dark}| {primary}') . $vl . '/' . self::KICK_THRESHOLD
+            . Manager::BRANDING()->format(' {dark}| {secondary}') . $details;
 
         foreach (Server::getInstance()->getOnlinePlayers() as $online) {
-            if ($online->getServer()->isOp($online->getName()) || $this->plugin->ranks()->getPlayerRank($online->getName())->getId() >= $moderatorId) {
+            if ($online->getServer()->isOp($online->getName()) || Manager::RANK()->getPlayerRank($online->getName())->getId() >= $moderatorId) {
                 $online->sendMessage($message);
             }
         }
