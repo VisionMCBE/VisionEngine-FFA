@@ -20,7 +20,6 @@ use vision\Main;
 
 final class FFAManager {
     public const LOBBY_TAG = 'vision_lobby_item';
-
     private Config $config;
 
     public function __construct(Main $plugin)  {

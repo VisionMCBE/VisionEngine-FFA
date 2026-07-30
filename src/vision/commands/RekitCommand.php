@@ -14,19 +14,17 @@ use pocketmine\player\Player;
 use vision\Main;
 
 final class RekitCommand extends Command {
-    public function __construct(private readonly Main $plugin)  {
+    public function __construct()  {
         parent::__construct('rekit', 'Reprend le kit FFA.', '/rekit', ['refill']);
         $this->setPermission(DefaultPermissionNames::GROUP_USER);
     }
 
     public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
-        if (!$this->testPermission($sender)) {
-            return;
-        }
         if (!$sender instanceof Player) {
             $sender->sendMessage('Commande en jeu uniquement.');
             return;
         }
+
         if (Manager::FFA()->isInside($sender->getPosition())) {
             $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Sors de la zone KitFFA pour prendre ton kit.'));
             return;

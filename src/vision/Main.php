@@ -15,15 +15,14 @@ use vision\commands\RekitCommand;
 use vision\commands\SettingsCommand;
 use vision\commands\StatsCommand;
 use vision\commands\XyzCommand;
-use vision\events\PlayerListener;
 use vision\items\ItemRegistry;
+use vision\listeners\PlayerListeners;
 use vision\managers\Manager;
 use vision\tasks\EnvironmentTask;
 use vision\tasks\LeaderboardTask;
 use vision\tasks\PackSendTask;
 use vision\tasks\ScoreboardTask;
 
-final class Main extends PluginBase
 final class Main extends PluginBase {
     use SingletonTrait;
 
@@ -42,31 +41,29 @@ final class Main extends PluginBase {
 
         $map = $this->getServer()->getCommandMap();
         $this->removeNonOpVanillaCommands();
-        
+
         $map->registerAll($this->getName(), [
-            new KitFFACommand($this),
-            new LeaderboardCommand($this),
+            new KitFFACommand(),
+            new LeaderboardCommand(),
             new MaintenanceCommand($this),
-            new RekitCommand($this),
-            new SettingsCommand($this),
-            new StatsCommand($this),
+            new RekitCommand(),
+            new SettingsCommand(),
+            new StatsCommand(),
             new XyzCommand($this),
         ]);
-        
+
 
         foreach ([
-            new PlayerListener($this),
+            new PlayerListeners($this),
             Manager::ANTICHEAT(),
             Manager::PACK(),
-        ] as $listener) {
+            ] as $listener) {
             $this->getServer()->getPluginManager()->registerEvents($listener, $this);
         }
 
         foreach ([
-            [new ScoreboardTask(), 20],
-            [new EnvironmentTask(), 20 * 10],
-            [new LeaderboardTask(), 20 * 10],
-            [new PackSendTask(), 1],
+            [new ScoreboardTask(), 20], [new EnvironmentTask(), 20 * 10],
+            [new LeaderboardTask(), 20 * 10], [new PackSendTask(), 1],
         ] as [$task, $period]) {
             $this->getScheduler()->scheduleRepeatingTask($task, $period);
         }

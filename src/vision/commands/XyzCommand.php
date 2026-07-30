@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace vision\commands;
 
 
+use pocketmine\Server;
 use vision\managers\Manager;
 
 use pocketmine\command\Command;
@@ -36,15 +37,12 @@ final class XyzCommand extends Command {
         $this->plugin->getConfig()->setNested('coordinates.enabled', $enabled);
         $this->plugin->getConfig()->save();
 
-        foreach ($this->plugin->getServer()->getOnlinePlayers() as $player) {
-            self::applyCoordinates($player, $enabled);
-        }
-        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? Manager::BRANDING()->format('{success}activées') : Manager::BRANDING()->format('{error}désactivées')));
-    }
+        array_map(function (Player $player) use($enabled) {
+            $packet = new GameRulesChangedPacket();
+            $packet->gameRules = ['showcoordinates' => new BoolGameRule($enabled, false)];
+            $player->getNetworkSession()->sendDataPacket($packet);
+        }, Server::getInstance()->getOnlinePlayers());
 
-    public static function applyCoordinates(Player $player, bool $show): void  {
-        $packet = new GameRulesChangedPacket();
-        $packet->gameRules = ['showcoordinates' => new BoolGameRule($show, false)];
-        $player->getNetworkSession()->sendDataPacket($packet);
+        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? Manager::BRANDING()->format('{success}activées') : Manager::BRANDING()->format('{error}désactivées')));
     }
 }

@@ -30,15 +30,16 @@ final class MaintenanceCommand extends Command {
         }
 
         $server = $this->plugin->getServer();
-        $enabled = !$server->hasWhitelist();
-        $server->getConfigGroup()->setConfigBool(ServerProperties::WHITELIST, $enabled);
+        $whitelist = !$server->hasWhitelist();
+        $server->getConfigGroup()->setConfigBool(ServerProperties::WHITELIST, $whitelist);
 
-        if ($enabled) {
-            foreach ($server->getOnlinePlayers() as $player) {
+        if ($whitelist) {
+            array_map(function (Player $player) use ($server) {
                 if (!$server->isOp($player->getName())) {
                     $player->kick(Manager::BRANDING()->format('{error}Le serveur est en maintenance.'));
                 }
-            }
+            }, $server->getOnlinePlayers());
+
             $server->broadcastMessage(Manager::BRANDING()->format('{prefix}{error}Maintenance activée.'));
             return;
         }
