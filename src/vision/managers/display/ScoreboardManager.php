@@ -12,6 +12,7 @@ use pocketmine\network\mcpe\protocol\RemoveObjectivePacket;
 use pocketmine\network\mcpe\protocol\SetScorePacket;
 use pocketmine\network\mcpe\protocol\types\ScorePacketEntry;
 use pocketmine\player\Player;
+use pocketmine\Server;
 final class ScoreboardManager {
     private const MAX_LINES = 15;
 
@@ -37,9 +38,9 @@ final class ScoreboardManager {
         $brand = Manager::BRANDING();
 
         $this->title($player, $combat > 0 ? $brand->combatTitle() : $brand->scoreboardTitle());
-        $this->line($player, 1, $brand->separator());
-        $this->line($player, 2, $brand->format('{primary}| {text}Grade : ') . $rank->getColor() . $rank->getName());
         if ($combat > 0) {
+            $this->line($player, 1, $brand->separator());
+            $this->line($player, 2, $brand->format('{primary}| {text}Grade : ') . $rank->getColor() . $rank->getName());
             $this->line($player, 3, $brand->format('{primary}| {text}Combat : {error}') . $combat . 's');
             $this->line($player, 4, $brand->format('{primary}| {text}Pearl : ') . ($pearl > 0 ? $brand->format('{error}') . $pearl . 's' : $brand->format('{success}Prêt')));
             $this->line($player, 5, $brand->format('{primary}| {text}Pomme : ') . ($gapple > 0 ? $brand->format('{error}') . $gapple . 's' : $brand->format('{success}Prêt')));
@@ -49,12 +50,11 @@ final class ScoreboardManager {
             $this->clearAfter($player, $next);
             return;
         }
-        $this->line($player, 3, $brand->format('{primary}| {text}Pearl : ') . ($pearl > 0 ? $brand->format('{error}') . $pearl . 's' : $brand->format('{success}Prêt')));
-        $this->line($player, 4, $brand->format('{primary}| {text}Pomme : ') . ($gapple > 0 ? $brand->format('{error}') . $gapple . 's' : $brand->format('{success}Prêt')));
-        $next = 5;
-        $this->line($player, $next++, $brand->separator());
-        $this->line($player, $next, $brand->format(' {secondary}{server_ip}'));
-        $this->clearAfter($player, $next);
+        $this->line($player, 1, $brand->format('{primary}| {text}Grade : ') . $rank->getColor() . $rank->getName());
+        $this->line($player, 2, $brand->format('{primary}| {text}Joueurs: {error}') . count(Server::getInstance()->getOnlinePlayers()));
+        $this->line($player, 3, $brand->separator());
+        $this->line($player, 4, $brand->format(' {secondary}{server_ip}'));
+        $this->clearAfter($player, 4);
     }
 
     private function title(Player $player, string $title): void  {
