@@ -1,0 +1,37 @@
+server:
+  name: "Vision"
+  mode_name: "FFA"
+  ip: "13.140.129.97:19132"
+  motd: "{primary}{server_name} {mode_name}{secondary} - KitFFA"
+
+colors:
+  bracket: "§1"
+  primary: "§9"
+  secondary: "§7"
+  text: "§f"
+  success: "§a"
+  error: "§c"
+  warning: "§e"
+  dark: "§8"
+
+scoreboard:
+  enabled_by_default: true
+  show_xyz: false
+  title: "{primary}{server_name} {mode_name}"
+  combat_title: "{error}Combat"
+  separator: "{secondary}-----------------"
+
+messages:
+  prefix: "{bracket}[{primary}{server_name}{bracket}] "
+  anticheat_prefix: "{bracket}[{primary}{server_name}AC{bracket}] "
+
+items:
+  creative_groups:
+    swords: "Épées {server_name}"
+    armors: "Armures {server_name}"
+  kit_names:
+    sword: "§r{primary}Épée FFA"
+    helmet: "§r{primary}Casque FFA"
+    chestplate: "§r{primary}Plastron FFA"
+    leggings: "§r{primary}Jambières FFA"
+    boots: "§r{primary}Bottes FFA"

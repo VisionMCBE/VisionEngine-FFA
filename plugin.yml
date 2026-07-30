@@ -1,0 +1,9 @@
+---
+name: VisionEngineFFA
+version: 1.0.0
+main: VisionEngineFFA\Main
+api: 5.0.0
+load: STARTUP
+depend:
+  - NayTools
+...
