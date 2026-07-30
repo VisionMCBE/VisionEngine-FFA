@@ -15,7 +15,7 @@ use vision\commands\RekitCommand;
 use vision\commands\SettingsCommand;
 use vision\commands\StatsCommand;
 use vision\commands\XyzCommand;
-use vision\events\FFAListener;
+use vision\events\PlayerListener;
 use vision\items\ItemRegistry;
 use vision\managers\Manager;
 use vision\tasks\EnvironmentTask;
@@ -55,7 +55,7 @@ final class Main extends PluginBase {
         
 
         foreach ([
-            new FFAListener($this),
+            new PlayerListener($this),
             Manager::ANTICHEAT(),
             Manager::PACK(),
         ] as $listener) {
