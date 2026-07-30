@@ -44,8 +44,7 @@ use vision\commands\XyzCommand;
 use function count;
 use function glob;
 
-final class FFAListener implements Listener
-{
+final class FFAListener implements Listener {
     private const COMBAT_SECONDS = 15;
     private const WALL_HEIGHT = 5;
     private const DETECT_DISTANCE = 4;

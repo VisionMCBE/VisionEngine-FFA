@@ -9,8 +9,7 @@ use pocketmine\player\Player;
 use pocketmine\utils\Config;
 use vision\Main;
 
-final class KnockbackManager
-{
+final class KnockbackManager {
     private const DEFAULT_ENABLED = true;
     private const DEFAULT_HORIZONTAL = 0.38;
     private const DEFAULT_VERTICAL = 0.4;

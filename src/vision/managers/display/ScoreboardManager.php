@@ -12,8 +12,7 @@ use pocketmine\network\mcpe\protocol\RemoveObjectivePacket;
 use pocketmine\network\mcpe\protocol\SetScorePacket;
 use pocketmine\network\mcpe\protocol\types\ScorePacketEntry;
 use pocketmine\player\Player;
-final class ScoreboardManager
-{
+final class ScoreboardManager {
     private const MAX_LINES = 15;
 
     /** @var array<string, string> */

@@ -13,8 +13,7 @@ use pocketmine\world\particle\FloatingTextParticle;
 use pocketmine\world\Position;
 use vision\Main;
 
-final class LeaderboardManager
-{
+final class LeaderboardManager {
     private Config $config;
 
     /** @var array<string, FloatingTextParticle> */

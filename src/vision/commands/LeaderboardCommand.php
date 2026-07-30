@@ -13,9 +13,8 @@ use pocketmine\permission\DefaultPermissions;
 use pocketmine\player\Player;
 use vision\Main;
 
-final class LeaderboardCommand extends Command
-{
-    public function __construct(private readonly Main $plugin)
+final class LeaderboardCommand extends Command {
+    public function __construct()
     {
         parent::__construct('leaderboard', 'Place les classements FFA.', '/leaderboard <kills|deaths|remove>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);

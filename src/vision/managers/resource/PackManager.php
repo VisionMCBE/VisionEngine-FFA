@@ -16,8 +16,7 @@ use vision\Main;
 use vision\services\PackSendEntry;
 use WeakMap;
 
-final class PackManager implements Listener
-{
+final class PackManager implements Listener {
     public const CHUNK_SIZE = 512 * 1024;
     public const PACKET_SEND_INTERVAL = 3;
 

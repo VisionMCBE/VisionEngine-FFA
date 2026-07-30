@@ -8,8 +8,7 @@ use pocketmine\scheduler\Task;
 use vision\Main;
 use vision\managers\Manager;
 
-final class PackSendTask extends Task
-{
+final class PackSendTask extends Task {
     public function onRun(): void
     {
         $tick = Main::getInstance()->getServer()->getTick();

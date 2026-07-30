@@ -32,8 +32,7 @@ use vision\managers\security\AntiCheatManager;
  * @method static AntiCheatManager ANTICHEAT()
  * @method static PackManager PACK()
  */
-final class Manager
-{
+final class Manager {
     /** @var array<string, object> */
     private static array $registrants = [];
 

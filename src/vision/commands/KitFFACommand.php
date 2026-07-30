@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace vision\commands;
 
-
 use vision\managers\Manager;
 
 use pocketmine\command\Command;
@@ -13,22 +12,16 @@ use pocketmine\permission\DefaultPermissions;
 use pocketmine\player\Player;
 use vision\Main;
 
-final class KitFFACommand extends Command
-{
-    public function __construct(private readonly Main $plugin)
-    {
+final class KitFFACommand extends Command {
+    public function __construct() {
         parent::__construct('kitffa', 'Configure la zone KitFFA.', '/kitffa <pos1|pos2|info|givekit>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
+        $this->setPermissionMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args): void
-    {
+    public function execute(CommandSender $sender, string $commandLabel, array $args): void {
         if (!$sender instanceof Player) {
             $sender->sendMessage('Commande en jeu uniquement.');
-            return;
-        }
-        if (!$sender->getServer()->isOp($sender->getName())) {
-            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
             return;
         }
 

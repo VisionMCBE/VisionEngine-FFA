@@ -14,8 +14,7 @@ use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use vision\Main;
 
-final class SettingsCommand extends Command
-{
+final class SettingsCommand extends Command {
     public function __construct(private readonly Main $plugin)
     {
         parent::__construct('settings', 'Parametres joueur.', '/settings');

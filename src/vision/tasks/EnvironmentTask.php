@@ -10,8 +10,7 @@ use pocketmine\scheduler\Task;
 use pocketmine\world\World;
 use vision\Main;
 
-final class EnvironmentTask extends Task
-{
+final class EnvironmentTask extends Task {
     public function onRun(): void
     {
         $server = Main::getInstance()->getServer();

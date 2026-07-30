@@ -15,8 +15,7 @@ use pocketmine\permission\DefaultPermissions;
 use pocketmine\player\Player;
 use vision\Main;
 
-final class XyzCommand extends Command
-{
+final class XyzCommand extends Command {
     public function __construct(private readonly Main $plugin)
     {
         parent::__construct('xyz', 'Active ou désactive les coordonnées.', '/xyz <on|off>');

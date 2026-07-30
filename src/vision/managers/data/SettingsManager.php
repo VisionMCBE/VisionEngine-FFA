@@ -8,8 +8,7 @@ use pocketmine\color\Color;
 use pocketmine\utils\Config;
 use vision\Main;
 
-final class SettingsManager
-{
+final class SettingsManager {
     private Config $config;
     private Main $plugin;
 

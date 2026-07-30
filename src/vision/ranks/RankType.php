@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace vision\ranks;
 
-enum RankType: string
-{
+enum RankType: string {
     case PAYSAN = '§7';
     case CONTRIBUTEUR = '§1';
     case CHEVALIER = '§e';

@@ -7,8 +7,7 @@ namespace vision\managers\data;
 use pocketmine\utils\Config;
 use vision\Main;
 
-final class StatsManager
-{
+final class StatsManager {
     private Config $config;
 
     public function __construct(Main $plugin)

@@ -8,8 +8,7 @@ use PDO;
 use vision\ranks\RankComponent;
 use vision\ranks\RankType;
 
-final class RankManager
-{
+final class RankManager {
     public function __construct(private readonly PDO $database) {}
 
     public function initSchema(): void

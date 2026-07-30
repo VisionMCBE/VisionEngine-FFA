@@ -13,8 +13,7 @@ use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use vision\Main;
 
-final class RekitCommand extends Command
-{
+final class RekitCommand extends Command {
     public function __construct(private readonly Main $plugin)
     {
         parent::__construct('rekit', 'Reprend le kit FFA.', '/rekit', ['refill']);

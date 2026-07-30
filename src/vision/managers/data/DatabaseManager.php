@@ -8,8 +8,7 @@ use PDO;
 use pocketmine\utils\Config;
 use vision\Main;
 
-final class DatabaseManager
-{
+final class DatabaseManager {
     private static ?PDO $database = null;
     private static ?Main $plugin = null;
 

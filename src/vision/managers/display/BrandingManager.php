@@ -6,8 +6,7 @@ namespace vision\managers\display;
 
 use vision\Main;
 
-final class BrandingManager
-{
+final class BrandingManager {
     public function __construct(private readonly Main $plugin) {}
 
     public function serverName(): string

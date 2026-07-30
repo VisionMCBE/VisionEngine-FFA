@@ -12,8 +12,7 @@ use pocketmine\command\CommandSender;
 use pocketmine\permission\DefaultPermissionNames;
 use vision\Main;
 
-final class StatsCommand extends Command
-{
+final class StatsCommand extends Command {
     public function __construct(private readonly Main $plugin)
     {
         parent::__construct('stats', 'Affiche les stats FFA.', '/stats [joueur]');

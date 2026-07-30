@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace vision\managers\player;
 
-final class CooldownManager
-{
+final class CooldownManager {
     /** @var array<string, array<string, int>> */
     private array $cooldowns = [];
 

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace vision\ranks;
 
-final class RankComponent
-{
+final class RankComponent {
     public function __construct(
         private readonly string $name,
         private readonly int $id,

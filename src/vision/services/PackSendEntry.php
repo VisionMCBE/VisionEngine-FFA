@@ -7,8 +7,7 @@ namespace vision\services;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 
-final class PackSendEntry
-{
+final class PackSendEntry {
     /** @var ClientboundPacket[] */
     private array $packets = [];
 

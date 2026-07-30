@@ -24,8 +24,7 @@ use pocketmine\player\Player;
 use pocketmine\Server;
 use vision\ranks\RankType;
 
-final class AntiCheatManager implements Listener
-{
+final class AntiCheatManager implements Listener {
     private const KICK_THRESHOLD = 6;
     private const DECAY_SECONDS = 30;
     private const ALERT_COOLDOWN = 5;

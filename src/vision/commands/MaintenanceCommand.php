@@ -14,8 +14,7 @@ use pocketmine\player\Player;
 use pocketmine\ServerProperties;
 use vision\Main;
 
-final class MaintenanceCommand extends Command
-{
+final class MaintenanceCommand extends Command {
     public function __construct(private readonly Main $plugin)
     {
         parent::__construct('maintenance', 'Active ou désactive la maintenance.', '/maintenance');

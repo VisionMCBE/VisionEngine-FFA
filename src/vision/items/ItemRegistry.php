@@ -10,8 +10,7 @@ use vision\managers\Manager;
 use NayTools\NayTools;
 use pocketmine\inventory\CreativeCategory;
 use pocketmine\item\ToolTier;
-final class ItemRegistry
-{
+final class ItemRegistry {
     public static function registerAll(): void
     {
         self::registerSwords();
