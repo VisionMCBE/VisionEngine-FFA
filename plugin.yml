@@ -1,7 +1,7 @@
 ---
 name: VisionEngineFFA
 version: 1.0.0
-main: VisionEngineFFA\Main
+main: vision\Main
 api: 5.0.0
 load: STARTUP
 depend:
