@@ -13,7 +13,7 @@ use vision\managers\display\BrandingManager;
 use vision\managers\display\LeaderboardManager;
 use vision\managers\display\ScoreboardManager;
 use vision\managers\player\CooldownManager;
-use vision\managers\player\FfaManager;
+use vision\managers\player\FFAManager;
 use vision\managers\player\KnockbackManager;
 use vision\managers\player\RankManager;
 use vision\managers\resource\PackManager;
@@ -28,7 +28,7 @@ use vision\managers\security\AntiCheatManager;
  * @method static SettingsManager SETTINGS()
  * @method static StatsManager STATS()
  * @method static LeaderboardManager LEADERBOARD()
- * @method static FfaManager FFA()
+ * @method static FFAManager FFA()
  * @method static AntiCheatManager ANTICHEAT()
  * @method static PackManager PACK()
  */
@@ -48,7 +48,7 @@ final class Manager {
         self::$registrants['SETTINGS'] = new SettingsManager($plugin);
         self::$registrants['STATS'] = new StatsManager($plugin);
         self::$registrants['LEADERBOARD'] = new LeaderboardManager($plugin);
-        self::$registrants['FFA'] = new FfaManager($plugin);
+        self::$registrants['FFA'] = new FFAManager($plugin);
         self::$registrants['ANTICHEAT'] = new AntiCheatManager();
         self::$registrants['PACK'] = new PackManager($plugin);
 

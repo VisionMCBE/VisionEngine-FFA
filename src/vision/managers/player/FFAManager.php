@@ -18,7 +18,7 @@ use pocketmine\utils\Config;
 use pocketmine\world\Position;
 use vision\Main;
 
-final class FfaManager {
+final class FFAManager {
     public const LOBBY_TAG = 'vision_lobby_item';
 
     private Config $config;
