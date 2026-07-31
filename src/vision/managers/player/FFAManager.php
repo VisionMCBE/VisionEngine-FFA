@@ -13,6 +13,8 @@ use pocketmine\item\PotionType;
 use pocketmine\item\StringToItemParser;
 use pocketmine\item\Item;
 use pocketmine\item\VanillaItems;
+use pocketmine\entity\effect\VanillaEffects;
+use pocketmine\entity\effect\EffectInstance;
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
 use pocketmine\world\Position;
@@ -101,6 +103,10 @@ final class FFAManager {
         foreach ($armor as $item) {
             $player->getArmorInventory()->setItem($item->getArmorSlot(), $item);
         }
+        $duration = 20 * 60 * 60 * 24;
+        $player->getEffects()->add(new EffectInstance(VanillaEffects::STRENGTH(), $duration, 1, false));
+        $player->getEffects()->add(new EffectInstance(VanillaEffects::RESISTANCE(), $duration, 0, false));
+        $player->getEffects()->add(new EffectInstance(VanillaEffects::SPEED(), $duration, 1, false));
     }
 
     public function giveLobbyItems(Player $player, bool $playersHidden = false): void  {
@@ -110,6 +116,14 @@ final class FFAManager {
         $this->updateVisibilityItem($player, $playersHidden);
         $inventory->setItem(4, $this->lobbyItem(VanillaItems::COMPASS(), 'settings', Manager::BRANDING()->format('§r{primary}Paramètres')));
         $inventory->setItem(6, $this->lobbyItem(VanillaItems::PAPER(), 'league', '§r§9Votre ligue'));
+    }
+
+    public function clearCombatEffects(Player $player): void {
+        $nightVision = $player->getEffects()->get(VanillaEffects::NIGHT_VISION());
+        $player->getEffects()->clear();
+        if ($nightVision !== null) {
+            $player->getEffects()->add(clone $nightVision);
+        }
     }
 
     public function updateVisibilityItem(Player $player, bool $playersHidden): void  {

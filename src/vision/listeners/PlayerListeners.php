@@ -235,7 +235,7 @@ final class PlayerListeners implements Listener {
         }
 
         if ($toInside && !Manager::FFA()->hasLobbyItems($player)) {
-            $player->getEffects()->clear();
+            Manager::FFA()->clearCombatEffects($player);
             Manager::FFA()->giveLobbyItems($player, Manager::COMBAT()->isLobbyHidden($player));
         }
 
@@ -249,7 +249,7 @@ final class PlayerListeners implements Listener {
             $player->sendMessage(Manager::BRANDING()->format('{prefix}{success}Votre kit FFA vous a été équipé.'));
         } elseif (!Manager::COMBAT()->wasInside($player) && $toInside) {
             Manager::COMBAT()->setLobbyHidden($player, false);
-            $player->getEffects()->clear();
+            Manager::FFA()->clearCombatEffects($player);
             Manager::FFA()->giveLobbyItems($player);
         }
         Manager::COMBAT()->setInside($player, $toInside);

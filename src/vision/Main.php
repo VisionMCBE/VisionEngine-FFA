@@ -12,6 +12,7 @@ use vision\commands\KitFFACommand;
 use vision\commands\LeaderboardCommand;
 use vision\commands\MaintenanceCommand;
 use vision\commands\RekitCommand;
+use vision\commands\RejoinCommand;
 use vision\commands\SettingsCommand;
 use vision\commands\SpawnCommand;
 use vision\commands\StatsCommand;
@@ -48,6 +49,7 @@ final class Main extends PluginBase {
             new LeaderboardCommand(),
             new MaintenanceCommand($this),
             new RekitCommand(),
+            new RejoinCommand(),
             new SettingsCommand(),
             new SpawnCommand(),
             new StatsCommand(),
