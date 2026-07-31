@@ -43,6 +43,6 @@ final class XyzCommand extends Command {
             $player->getNetworkSession()->sendDataPacket($packet);
         }, Server::getInstance()->getOnlinePlayers());
 
-        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Coordonnées : ') . ($enabled ? Manager::BRANDING()->format('{success}activées') : Manager::BRANDING()->format('{error}désactivées')));
+        $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}L’affichage des coordonnées a été ') . ($enabled ? Manager::BRANDING()->format('{success}activé.') : Manager::BRANDING()->format('{error}désactivé.')));
     }
 }

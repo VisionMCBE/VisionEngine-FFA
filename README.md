@@ -14,7 +14,7 @@ PocketMine-MP KitFFA plugin using NayTools custom items and forms.
 - Lobby hotbar items inside the KitFFA zone.
 - JSON FFA stats: kills, deaths, K/D, current streak and best streak.
 - Combat system with 15 second timer.
-- Ender pearl and golden apple cooldowns.
+- Ender pearl cooldown and Potion Launcher.
 - Optional combat visibility isolation.
 - Basic anticheat alerts and kicks.
 - Maintenance command with whitelist toggle.

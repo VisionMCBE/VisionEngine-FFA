@@ -21,7 +21,7 @@ final class KitFFACommand extends Command {
 
     public function execute(CommandSender $sender, string $commandLabel, array $args): void {
         if (!$sender instanceof Player) {
-            $sender->sendMessage('Commande en jeu uniquement.');
+            $sender->sendMessage('Cette commande doit être utilisée en jeu.');
             return;
         }
 
@@ -34,14 +34,14 @@ final class KitFFACommand extends Command {
 
         if ($sub === 'givekit') {
             Manager::FFA()->giveKit($sender);
-            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Kit FFA donné.'));
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{success}Le kit FFA vous a bien été donné.'));
             return;
         }
 
         if ($sub === 'info') {
             $bounds = Manager::FFA()->bounds();
             if ($bounds === null) {
-                $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Zone KitFFA incomplète.'));
+                $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}La zone KitFFA n’est pas encore entièrement configurée.'));
                 return;
             }
             $sender->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Zone KitFFA: {primary}') . $bounds['world'] . Manager::BRANDING()->format(' {secondary}X ') . $bounds['minX'] . ' -> ' . $bounds['maxX'] . Manager::BRANDING()->format(' {secondary}Z ') . $bounds['minZ'] . ' -> ' . $bounds['maxZ']);

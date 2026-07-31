@@ -13,6 +13,7 @@ use vision\commands\LeaderboardCommand;
 use vision\commands\MaintenanceCommand;
 use vision\commands\RekitCommand;
 use vision\commands\SettingsCommand;
+use vision\commands\SpawnCommand;
 use vision\commands\StatsCommand;
 use vision\commands\XyzCommand;
 use vision\items\ItemRegistry;
@@ -48,6 +49,7 @@ final class Main extends PluginBase {
             new MaintenanceCommand($this),
             new RekitCommand(),
             new SettingsCommand(),
+            new SpawnCommand(),
             new StatsCommand(),
             new XyzCommand($this),
         ]);
@@ -85,7 +87,7 @@ final class Main extends PluginBase {
 
         $map = $this->getServer()->getCommandMap();
         foreach ($map->getCommands() as $command) {
-            if (!$command instanceof VanillaCommand || isset($allowed[$command->getName()])) {
+            if (!$command instanceof VanillaCommand || in_array($command->getName(), $allowed, true)) {
                 continue;
             }
             $map->unregister($command);

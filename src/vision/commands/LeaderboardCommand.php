@@ -15,31 +15,33 @@ use vision\Main;
 
 final class LeaderboardCommand extends Command {
     public function __construct() {
-        parent::__construct('leaderboard', 'Place les classements FFA.', '/leaderboard <kills|deaths|remove>');
+        parent::__construct('leaderboard', 'Permet de placer ou retirer les classements FFA.', '/leaderboard <kills|deaths|league|remove>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
         $this->setPermissionMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
     }
 
     public function execute(CommandSender $sender, string $commandLabel, array $args): void  {
         if (!$sender instanceof Player) {
-            $sender->sendMessage('Commande en jeu uniquement.');
+            $sender->sendMessage('Cette commande doit être utilisée en jeu.');
             return;
         }
 
         $type = strtolower((string) ($args[0] ?? ''));
-        if ($type === 'kills' || $type === 'deaths') {
+        $type = $type === 'ligue' ? 'league' : $type;
+        if ($type === 'kills' || $type === 'deaths' || $type === 'league') {
             Manager::LEADERBOARD()->place($type, $sender);
-            $sender->sendMessage('§9Classement ' . ($type === 'kills' ? 'des kills' : 'des morts') . ' placé.');
+            $labels = ['kills' => 'des kills', 'deaths' => 'des morts', 'league' => 'des ligues'];
+            $sender->sendMessage('§9Le classement ' . $labels[$type] . ' a été placé à votre position.');
             return;
         }
 
         if ($type === 'remove') {
             $sender->sendMessage(Manager::LEADERBOARD()->removeNearest($sender->getPosition())
-                ? '§9Classement le plus proche supprimé.'
-                : '§cAucun classement à moins de 5 blocs.');
+                ? '§9Le classement le plus proche a été supprimé.'
+                : '§cAucun classement n’a été trouvé à moins de 5 blocs.');
             return;
         }
 
-        $sender->sendMessage('§7Utilisation : §9/leaderboard <kills|deaths|remove>');
+        $sender->sendMessage('§7Utilisation : §9/leaderboard <kills|deaths|league|remove>');
     }
 }

@@ -40,15 +40,15 @@ final class MaintenanceCommand extends Command {
                 }
             }, $server->getOnlinePlayers());
 
-            $server->broadcastMessage(Manager::BRANDING()->format('{prefix}{error}Maintenance activée.'));
+            $server->broadcastMessage(Manager::BRANDING()->format('{prefix}{error}Le mode maintenance vient d’être activé.'));
             return;
         }
 
-        $message = Manager::BRANDING()->format('{prefix}{success}Maintenance désactivée.');
+        $message = Manager::BRANDING()->format('{prefix}{success}Le mode maintenance vient d’être désactivé.');
         if ($sender instanceof Player) {
             $sender->sendMessage($message);
         } else {
-            $sender->sendMessage('Maintenance désactivée.');
+            $sender->sendMessage('Le mode maintenance vient d’être désactivé.');
         }
     }
 }

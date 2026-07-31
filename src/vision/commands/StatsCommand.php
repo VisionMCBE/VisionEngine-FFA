@@ -14,7 +14,7 @@ use vision\Main;
 
 final class StatsCommand extends Command {
     public function __construct()  {
-        parent::__construct('stats', 'Affiche les stats FFA.', '/stats [joueur]');
+        parent::__construct('stats', 'Affiche les statistiques FFA d’un joueur.', '/stats [joueur]');
         $this->setPermission(DefaultPermissionNames::GROUP_USER);
     }
 
@@ -29,12 +29,12 @@ final class StatsCommand extends Command {
         $brand = Manager::BRANDING();
 
         $sender->sendMessage(
-            $brand->format('{prefix}{primary}Stats FFA de {text}') . $target .
+            $brand->format('{prefix}{primary}Statistiques FFA de {text}') . $target .
             "\n" . $brand->format('{secondary}Kills : {primary}') . $stats['kills'] .
             "\n" . $brand->format('{secondary}Morts : {primary}') . $stats['deaths'] .
             "\n" . $brand->format('{secondary}K/D : {primary}') . $kd .
             "\n" . $brand->format('{secondary}Streak : {primary}') . $stats['streak'] .
-            "\n" . $brand->format('{secondary}Best streak : {primary}') . $stats['best_streak']
+            "\n" . $brand->format('{secondary}Meilleure série : {primary}') . $stats['best_streak']
         );
     }
 }

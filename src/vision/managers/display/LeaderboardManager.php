@@ -76,16 +76,24 @@ final class LeaderboardManager {
     private function refreshOne(string $key, array $data): void  {
         $world = $this->plugin->getServer()->getWorldManager()->getWorldByName((string) ($data['world'] ?? ''));
         $type = (string) ($data['type'] ?? '');
-        if ($world === null || ($type !== 'kills' && $type !== 'deaths')) {
+        if ($world === null || !in_array($type, ['kills', 'deaths', 'league'], true)) {
             return;
         }
 
-        $title = $type === 'kills' ? '§l§9TOP KILLS' : '§l§9TOP MORTS';
+        $title = match ($type) {
+            'kills' => '§l§9TOP KILLS',
+            'deaths' => '§l§9TOP MORTS',
+            default => '§l§9TOP LIGUES',
+        };
         $lines = [];
-        foreach (Manager::STATS()->top($type) as $index => $row) {
+        $rows = $type === 'league' ? Manager::ELO()->top() : Manager::STATS()->top($type);
+        foreach ($rows as $index => $row) {
             $rank = $index + 1;
             $color = $rank === 1 ? '§6' : ($rank === 2 ? '§7' : ($rank === 3 ? '§c' : '§f'));
-            $lines[] = $color . $rank . '. §f' . $row['name'] . ' §8- §9' . $row['value'];
+            $suffix = $type === 'league'
+                ? ' §8- ' . $row['color'] . $row['league'] . ' §8(§9' . $row['value'] . '§8)'
+                : ' §8- §9' . $row['value'];
+            $lines[] = $color . $rank . '. §f' . $row['name'] . $suffix;
         }
         if ($lines === []) {
             $lines[] = '§7Aucun joueur classé.';

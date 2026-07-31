@@ -14,7 +14,7 @@ Plugin KitFFA pour PocketMine-MP utilisant les objets et formulaires personnalis
 - Objets de raccourci dans la barre rapide de la zone KitFFA.
 - Statistiques FFA sauvegardées en JSON : kills, morts, K/D, série actuelle et meilleure série.
 - Système de combat avec délai de 15 secondes.
-- Délais pour les perles de l'End et les pommes dorées.
+- Délai pour les perles de l'End et Potion Launcher.
 - Isolation optionnelle de la visibilité pendant les combats.
 - Alertes et sanctions anticheat basiques.
 - Mode maintenance avec gestion de la whitelist.

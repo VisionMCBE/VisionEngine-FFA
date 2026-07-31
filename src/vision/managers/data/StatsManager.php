@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace vision\managers\data;
 
+use pocketmine\item\Item;
+use pocketmine\item\PotionType;
+use pocketmine\item\VanillaItems;
+use pocketmine\player\Player;
 use pocketmine\utils\Config;
 use vision\Main;
 
@@ -45,6 +49,12 @@ final class StatsManager {
         return $stats['kills'] / max(1, $stats['deaths']);
     }
 
+    public function killMessage(Player $killer, Player $victim): string  {
+        $potion = VanillaItems::SPLASH_POTION()->setType(PotionType::STRONG_HEALING());
+        return '§9[Vision] §f' . $killer->getName() . ' §8[' . $this->countItems($killer, $potion) . '] §7a désintégré §f'
+            . $victim->getName() . ' §8[' . $this->countItems($victim, $potion) . ']§7.';
+    }
+
     /** @return list<array{name: string, value: int}> */
     public function top(string $stat, int $limit = 10): array  {
         if ($stat !== 'kills' && $stat !== 'deaths') {
@@ -73,5 +83,15 @@ final class StatsManager {
         }
         $this->config->setNested($key . '.name', $player);
         $this->config->save();
+    }
+
+    private function countItems(Player $player, Item $needle): int  {
+        $count = 0;
+        foreach ($player->getInventory()->getContents() as $item) {
+            if ($item->equals($needle, false, false)) {
+                $count += $item->getCount();
+            }
+        }
+        return $count;
     }
 }

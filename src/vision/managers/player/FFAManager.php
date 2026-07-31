@@ -90,7 +90,10 @@ final class FFAManager {
         $player->getArmorInventory()->clearAll();
         $player->getInventory()->setItem(0, $sword);
         $player->getInventory()->setItem(1, VanillaItems::ENDER_PEARL()->setCount(16));
-        $player->getInventory()->setItem(2, VanillaItems::GOLDEN_APPLE()->setCount(3));
+        $launcher = $parser->parse('visionengine:potion_launcher');
+        if ($launcher !== null) {
+            $player->getInventory()->setItem(2, $launcher);
+        }
         $potion = VanillaItems::SPLASH_POTION()->setType(PotionType::STRONG_HEALING());
         for ($slot = 3; $slot < $player->getInventory()->getSize(); ++$slot) {
             $player->getInventory()->setItem($slot, clone $potion);
@@ -106,7 +109,7 @@ final class FFAManager {
         $player->getArmorInventory()->clearAll();
         $this->updateVisibilityItem($player, $playersHidden);
         $inventory->setItem(4, $this->lobbyItem(VanillaItems::COMPASS(), 'settings', Manager::BRANDING()->format('§r{primary}Paramètres')));
-        $inventory->setItem(5, $this->lobbyItem(VanillaItems::PAPER(), 'soon', '§r§8-'));
+        $inventory->setItem(6, $this->lobbyItem(VanillaItems::PAPER(), 'league', '§r§9Votre ligue'));
     }
 
     public function updateVisibilityItem(Player $player, bool $playersHidden): void  {
@@ -121,7 +124,7 @@ final class FFAManager {
     public function hasLobbyItems(Player $player): bool  {
         return $this->isLobbyItem($player->getInventory()->getItem(2))
             && $this->isLobbyItem($player->getInventory()->getItem(4))
-            && $this->isLobbyItem($player->getInventory()->getItem(5));
+            && $this->isLobbyItem($player->getInventory()->getItem(6));
     }
 
     public function isLobbyItem(Item $item): bool  {

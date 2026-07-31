@@ -31,30 +31,34 @@ final class ScoreboardManager {
             return;
         }
 
-        $rank = Manager::RANK()->getPlayerRank($player->getName());
         $combat = Manager::COOLDOWN()->remaining($player->getName(), 'combat');
         $pearl = Manager::COOLDOWN()->remaining($player->getName(), 'pearl');
-        $gapple = Manager::COOLDOWN()->remaining($player->getName(), 'gapple');
         $brand = Manager::BRANDING();
+        $league = Manager::ELO()->league($player->getName());
+        $players = count(Server::getInstance()->getOnlinePlayers());
 
         $this->title($player, $combat > 0 ? $brand->combatTitle() : $brand->scoreboardTitle());
-        if ($combat > 0) {
-            $this->line($player, 1, $brand->separator());
-            $this->line($player, 2, $brand->format('{primary}| {text}Grade : ') . $rank->getColor() . $rank->getName());
-            $this->line($player, 3, $brand->format('{primary}| {text}Combat : {error}') . $combat . 's');
-            $this->line($player, 4, $brand->format('{primary}| {text}Pearl : ') . ($pearl > 0 ? $brand->format('{error}') . $pearl . 's' : $brand->format('{success}Prêt')));
-            $this->line($player, 5, $brand->format('{primary}| {text}Pomme : ') . ($gapple > 0 ? $brand->format('{error}') . $gapple . 's' : $brand->format('{success}Prêt')));
-            $next = 6;
-            $this->line($player, $next++, $brand->separator());
-            $this->line($player, $next, $brand->format(' {secondary}{server_ip}'));
-            $this->clearAfter($player, $next);
+        $this->line($player, 1, '§9§l' . $player->getName() . '§r');
+        $this->line($player, 2, ' ');
+        $this->line($player, 3, '§fJoueurs: §9' . $players);
+        $this->line($player, 4, '§fLigue: ' . $league['color'] . $league['name']);
+
+        if ($combat <= 0) {
+            $this->line($player, 5, '  ');
+            $this->line($player, 6, $brand->format('§9{server_ip}'));
+            $this->clearAfter($player, 6);
             return;
         }
-        $this->line($player, 1, $brand->format('{primary}| {text}Grade : ') . $rank->getColor() . $rank->getName());
-        $this->line($player, 2, $brand->format('{primary}| {text}Joueurs: {error}') . count(Server::getInstance()->getOnlinePlayers()));
-        $this->line($player, 3, $brand->separator());
-        $this->line($player, 4, $brand->format(' {secondary}{server_ip}'));
-        $this->clearAfter($player, 4);
+
+        $opponent = Manager::COOLDOWN()->combatOpponent($player->getName()) ?? 'Inconnu';
+        $this->line($player, 5, '  ');
+        $this->line($player, 6, '§9§lCombat§r');
+        $this->line($player, 7, '§fAdversaire: §9' . $opponent);
+        $this->line($player, 8, '§fTemps: §9' . $combat . 's');
+        $this->line($player, 9, '§fEnderpearl: §9' . ($pearl > 0 ? $pearl . 's' : 'Prête'));
+        $this->line($player, 10, '   ');
+        $this->line($player, 11, $brand->format('§9{server_ip}'));
+        $this->clearAfter($player, 11);
     }
 
     private function title(Player $player, string $title): void  {

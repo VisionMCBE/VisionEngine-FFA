@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace vision\listeners;
 
 use pocketmine\entity\projectile\EnderPearl;
-use pocketmine\item\Item;
 use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
 use pocketmine\network\mcpe\protocol\types\BoolGameRule;
 use pocketmine\Server;
 use vision\form\SettingsForm;
 use vision\managers\Manager;
 
-use pocketmine\block\VanillaBlocks;
-use pocketmine\block\utils\DyeColor;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
@@ -23,60 +20,21 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerDropItemEvent;
-use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerItemUseEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
-use pocketmine\item\GoldenApple;
-use pocketmine\item\GoldenAppleEnchanted;
-use pocketmine\item\PotionType;
 use pocketmine\item\SplashPotion as SplashPotionItem;
 use pocketmine\item\VanillaItems;
-use pocketmine\network\mcpe\convert\TypeConverter;
-use pocketmine\network\mcpe\protocol\types\BlockPosition;
-use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
-use pocketmine\player\chat\ChatFormatter;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
-use pocketmine\utils\TextFormat;
-use pocketmine\world\particle\PotionSplashParticle;
-use pocketmine\world\Position;
-use pocketmine\world\sound\PotionSplashSound;
-use pocketmine\world\sound\ThrowSound;
 use vision\Main;
-use vision\commands\XyzCommand;
 
 use vision\services\chat\CustomChatFormatter;
 use function count;
 use function glob;
 
 final class PlayerListeners implements Listener {
-    private const COMBAT_SECONDS = 15;
-    private const WALL_HEIGHT = 5;
-    private const DETECT_DISTANCE = 4;
-
-    /** @var array<string, int> */
-    private array $combatUntil = [];
-
-    /** @var array<string, string> */
-    private array $combatOpponent = [];
-
-    /** @var array<string, string> */
-    private array $names = [];
-
-    /** @var array<string, bool> */
-    private array $insideFfa = [];
-
-    /** @var array<string, bool> */
-    private array $hideLobbyPlayers = [];
-
-    /** @var array<string, array<string, true>> */
-    private array $sentBarrier = [];
-
-    /** @var array<string, bool> */
-    private array $knownPlayers = [];
-
     public function __construct(private readonly Main $plugin) {}
 
     public function handleBlockBreakEvent(BlockBreakEvent $event): void  {
@@ -94,19 +52,15 @@ final class PlayerListeners implements Listener {
     public function handlePlayerJoinEvent(PlayerJoinEvent $event): void  {
         $player = $event->getPlayer();
         $event->setJoinMessage('');
-        $key = strtolower($player->getName());
-        $isFirstJoin = !$player->hasPlayedBefore() && !isset($this->knownPlayers[$key]);
-        $this->knownPlayers[$key] = true;
-        $this->names[$key] = $player->getName();
-        $this->combatUntil[$key] = 0;
-        $this->hideLobbyPlayers[$key] = false;
-        $this->insideFfa[$key] = Manager::FFA()->isInside($player->getPosition());
+        $isFirstJoin = !$player->hasPlayedBefore();
+        $insideFfa = Manager::FFA()->isInside($player->getPosition());
+        Manager::COMBAT()->register($player, $insideFfa);
         
         $packet = new GameRulesChangedPacket();
         $packet->gameRules = ['showcoordinates' => new BoolGameRule((bool) $this->plugin->getConfig()->getNested('coordinates.enabled', false), false)];
         $player->getNetworkSession()->sendDataPacket($packet);
 
-        if ($this->insideFfa[$key]) {
+        if ($insideFfa) {
             Manager::FFA()->giveLobbyItems($player);
         }
         
@@ -118,21 +72,34 @@ final class PlayerListeners implements Listener {
             $number = count(glob(Server::getInstance()->getDataPath() . 'players' . DIRECTORY_SEPARATOR . '*') ?: []) + 1;
             Server::getInstance()->broadcastMessage(Manager::BRANDING()->format('{prefix}{secondary}Bienvenue à {primary}') . $player->getName() . Manager::BRANDING()->format(' {secondary}sur {primary}{server_name}{secondary} ! Souhaitez-lui la bienvenue avec {primary}/bvn {dark}(#') . $number . ')');
         }
-        $this->refreshAllVisibility();
+        Manager::COMBAT()->refreshAllVisibility();
     }
 
     public function handlePlayerQuitEvent(PlayerQuitEvent $event): void  {
+        $player = $event->getPlayer();
         $event->setQuitMessage('');
-        Manager::SCOREBOARD()->remove($event->getPlayer());
-        $key = strtolower($event->getPlayer()->getName());
-        unset($this->combatUntil[$key], $this->insideFfa[$key], $this->hideLobbyPlayers[$key], $this->sentBarrier[$key], $this->combatOpponent[$key], $this->names[$key]);
-        foreach ($this->combatOpponent as $playerKey => $opponentKey) {
-            if ($opponentKey === $key) {
-                unset($this->combatOpponent[$playerKey]);
+        Manager::SCOREBOARD()->remove($player);
+
+        $opponent = Manager::COMBAT()->opponent($player);
+        if ($opponent !== null) {
+            Manager::STATS()->addDeath($player->getName());
+            Manager::STATS()->addKill($opponent->getName());
+            $eloChange = Manager::ELO()->recordKill($opponent->getName(), $player->getName());
+            $league = Manager::ELO()->league($opponent->getName());
+            $opponent->sendPopup('§aVictoire par abandon : +' . $eloChange['winner_gain'] . ' ELO §8- '
+                . $league['color'] . $league['name'] . ($eloChange['anti_farm'] ? ' §c(Anti-farm)' : ''));
+            if ($league['name'] !== $eloChange['winner_old_league']) {
+                $opponent->sendTitle('§9§lPROMOTION', $league['color'] . $league['name'], 10, 50, 15);
             }
+            Manager::FFA()->giveKit($opponent);
+            Server::getInstance()->broadcastMessage(Manager::BRANDING()->format('{prefix}{primary}') . $player->getName()
+                . Manager::BRANDING()->format(' {secondary}a perdu son combat en se déconnectant face à {primary}')
+                . $opponent->getName() . Manager::BRANDING()->format('{secondary}.'));
+            Manager::COMBAT()->end($player);
         }
-        Server::getInstance()->broadcastTip(Manager::BRANDING()->format('{error}- ') . $event->getPlayer()->getName() . Manager::BRANDING()->format(' {error}-'));
-        $this->refreshAllVisibility();
+
+        Manager::COMBAT()->unregister($player);
+        Server::getInstance()->broadcastTip(Manager::BRANDING()->format('{error}- ') . $player->getName() . Manager::BRANDING()->format(' {error}-'));
     }
 
     public function handleEntityDamageByEntityEvent(EntityDamageByEntityEvent $event): void  {
@@ -151,22 +118,15 @@ final class PlayerListeners implements Listener {
 
         $victimKey = strtolower($victim->getName());
         $damagerKey = strtolower($damager->getName());
-        $victimOpponent = $this->activeOpponent($victim);
-        $damagerOpponent = $this->activeOpponent($damager);
+        $victimOpponent = Manager::COMBAT()->activeOpponent($victim);
+        $damagerOpponent = Manager::COMBAT()->activeOpponent($damager);
         if (($victimOpponent !== null && $victimOpponent !== $damagerKey) || ($damagerOpponent !== null && $damagerOpponent !== $victimKey)) {
             $event->cancel();
             $damager->sendMessage(Manager::BRANDING()->format('{prefix}{error}Ce joueur est déjà en combat avec quelqu’un d’autre.'));
             return;
         }
 
-        $until = time() + self::COMBAT_SECONDS;
-        $this->combatUntil[$victimKey] = $until;
-        $this->combatUntil[$damagerKey] = $until;
-        $this->combatOpponent[$victimKey] = $damagerKey;
-        $this->combatOpponent[$damagerKey] = $victimKey;
-        Manager::COOLDOWN()->add($victim->getName(), 'combat', self::COMBAT_SECONDS);
-        Manager::COOLDOWN()->add($damager->getName(), 'combat', self::COMBAT_SECONDS);
-        $this->refreshAllVisibility();
+        Manager::COMBAT()->start($victim, $damager);
     }
 
     public function handlePlayerChatEvent(PlayerChatEvent $event): void  {
@@ -190,29 +150,27 @@ final class PlayerListeners implements Listener {
         if ($cause instanceof EntityDamageByEntityEvent && $cause->getDamager() instanceof Player) {
             $killer = $cause->getDamager();
             if ($killer !== $victim) {
-                $message = $this->killMessage($killer, $victim);
-                $this->endCombat($killer);
-                $this->endCombat($victim);
+                $message = Manager::STATS()->killMessage($killer, $victim);
+                Manager::COMBAT()->end($killer);
+                Manager::COMBAT()->end($victim);
                 Manager::STATS()->addKill($killer->getName());
+                $eloChange = Manager::ELO()->recordKill($killer->getName(), $victim->getName());
+                $killerLeague = Manager::ELO()->league($killer->getName());
+                $victimLeague = Manager::ELO()->league($victim->getName());
+                $killer->sendPopup('§aVictoire : +' . $eloChange['winner_gain'] . ' ELO §8- ' . $killerLeague['color'] . $killerLeague['name']
+                    . ($eloChange['anti_farm'] ? ' §c(Anti-farm)' : ''));
+                $victim->sendPopup('§cDéfaite : -' . $eloChange['loser_loss'] . ' ELO §8- ' . $victimLeague['color'] . $victimLeague['name']);
+                if ($killerLeague['name'] !== $eloChange['winner_old_league']) {
+                    $killer->sendTitle('§9§lPROMOTION', $killerLeague['color'] . $killerLeague['name'], 10, 50, 15);
+                }
+                if ($victimLeague['name'] !== $eloChange['loser_old_league']) {
+                    $victim->sendTitle('§c§lRÉTROGRADATION', $victimLeague['color'] . $victimLeague['name'], 10, 50, 15);
+                }
                 Server::getInstance()->broadcastMessage($message);
                 Manager::FFA()->giveKit($killer);
-                $killer->sendTip(Manager::BRANDING()->format('{success}Kit refill.'));
+                $killer->sendMessage(Manager::BRANDING()->format('{prefix}{success}Votre kit a été entièrement réapprovisionné.'));
             }
         }
-    }
-
-    public function handlePlayerItemConsumeEvent(PlayerItemConsumeEvent $event): void  {
-        $player = $event->getPlayer();
-        $item = $event->getItem();
-        if (!$item instanceof GoldenApple && !$item instanceof GoldenAppleEnchanted) {
-            return;
-        }
-        if (Manager::COOLDOWN()->has($player->getName(), 'gapple')) {
-            $event->cancel();
-            $player->sendTip(Manager::BRANDING()->format('{error}Pomme disponible dans ') . Manager::COOLDOWN()->remaining($player->getName(), 'gapple') . 's.');
-            return;
-        }
-        Manager::COOLDOWN()->add($player->getName(), 'gapple', 15);
     }
 
     public function handlePlayerItemUseEvent(PlayerItemUseEvent $event): void  {
@@ -224,10 +182,7 @@ final class PlayerListeners implements Listener {
             if (!$beforeUse->equalsExact($item)) {
                 return;
             }
-            $player->getWorld()->addSound($player->getPosition(), new ThrowSound());
-            $player->getWorld()->addSound($player->getPosition(), new PotionSplashSound());
-            $this->addPotionParticle($player);
-            $this->applyInstantPotion($player, $item->getType());
+            Manager::POTION()->applyGuided($player, $item->getType());
             $player->getInventory()->setItemInHand($item->pop()->isNull() ? VanillaItems::AIR() : $item);
             return;
         }
@@ -243,13 +198,14 @@ final class PlayerListeners implements Listener {
             return;
         }
 
+        if ($action === 'league') {
+            $player->sendMessage(Manager::ELO()->information($player->getName()));
+            return;
+        }
+
         if ($action === 'players_visibility' && Manager::FFA()->isInside($player->getPosition())) {
-            $key = strtolower($player->getName());
-            $hidden = !($this->hideLobbyPlayers[$key] ?? false);
-            $this->hideLobbyPlayers[$key] = $hidden;
+            $hidden = Manager::COMBAT()->toggleLobbyVisibility($player);
             Manager::FFA()->updateVisibilityItem($player, $hidden);
-            $this->refreshVisibility($player);
-            $player->sendTip($hidden ? '§cJoueurs cachés.' : '§aJoueurs affichés.');
         }
     }
 
@@ -268,41 +224,39 @@ final class PlayerListeners implements Listener {
 
     public function handlePlayerMoveEvent(PlayerMoveEvent $event): void  {
         $player = $event->getPlayer();
-        $key = strtolower($player->getName());
         $fromInside = Manager::FFA()->isInside($event->getFrom());
         $toInside = Manager::FFA()->isInside($event->getTo());
 
-        if (!$fromInside && $toInside && $this->isInCombat($player)) {
+        if (!$fromInside && $toInside && Manager::COMBAT()->isInCombat($player)) {
             $event->cancel();
-            $player->sendTip(Manager::BRANDING()->format('{error}Vous ne pouvez pas rentrer en KitFFA en combat.'));
-            $this->sendBarrierToward($player, $event->getTo());
+            $player->sendTip(Manager::BRANDING()->format('{error}Vous ne pouvez pas entrer dans la zone protégée pendant un combat.'));
+            Manager::COMBAT()->sendWallTowardBoth($player, $event->getTo());
             return;
         }
 
         if ($toInside && !Manager::FFA()->hasLobbyItems($player)) {
             $player->getEffects()->clear();
-            Manager::FFA()->giveLobbyItems($player, $this->hideLobbyPlayers[$key] ?? false);
+            Manager::FFA()->giveLobbyItems($player, Manager::COMBAT()->isLobbyHidden($player));
         }
 
-        if (!$toInside && $this->isInCombat($player)) {
-            $this->sendCombatWallTowardBoth($player, $event->getTo());
+        if (!$toInside && Manager::COMBAT()->isInCombat($player)) {
+            Manager::COMBAT()->sendWallTowardBoth($player, $event->getTo());
         }
 
-        if (($this->insideFfa[$key] ?? false) && !$toInside) {
-            $this->hideLobbyPlayers[$key] = false;
+        if (Manager::COMBAT()->wasInside($player) && !$toInside) {
+            Manager::COMBAT()->setLobbyHidden($player, false);
             Manager::FFA()->giveKit($player);
-            $player->sendMessage(Manager::BRANDING()->format('{prefix}{secondary}Kit FFA équipé.'));
-        } elseif (!($this->insideFfa[$key] ?? false) && $toInside) {
-            $this->hideLobbyPlayers[$key] = false;
+            $player->sendMessage(Manager::BRANDING()->format('{prefix}{success}Votre kit FFA vous a été équipé.'));
+        } elseif (!Manager::COMBAT()->wasInside($player) && $toInside) {
+            Manager::COMBAT()->setLobbyHidden($player, false);
             $player->getEffects()->clear();
             Manager::FFA()->giveLobbyItems($player);
         }
-        $this->insideFfa[$key] = $toInside;
+        Manager::COMBAT()->setInside($player, $toInside);
 
-        if (!$this->isInCombat($player)) {
-            unset($this->combatOpponent[$key]);
-            $this->clearBarrier($player);
-            $this->refreshVisibility($player);
+        if (!Manager::COMBAT()->isInCombat($player)) {
+            Manager::COMBAT()->clearWall($player);
+            Manager::COMBAT()->refreshVisibility($player);
         }
     }
 
@@ -314,204 +268,10 @@ final class PlayerListeners implements Listener {
         }
         if (Manager::COOLDOWN()->has($owner->getName(), 'pearl')) {
             $event->cancel();
-            $owner->sendMessage(Manager::BRANDING()->format('{prefix}{error}Enderpearl disponible dans ') . Manager::COOLDOWN()->remaining($owner->getName(), 'pearl') . 's.');
+            $owner->sendMessage(Manager::BRANDING()->format('{prefix}{error}Vous pourrez réutiliser une perle de l’End dans {primary}') . Manager::COOLDOWN()->remaining($owner->getName(), 'pearl') . Manager::BRANDING()->format(' {error}secondes.'));
             return;
         }
         Manager::COOLDOWN()->add($owner->getName(), 'pearl', 15);
     }
 
-    private function isInCombat(Player $player): bool  { # TODO: MANAGER for combat logger
-        return ($this->combatUntil[strtolower($player->getName())] ?? 0) > time();
-    }
-
-    private function endCombat(Player $player): void  {
-        $key = strtolower($player->getName());
-        $opponent = $this->combatOpponent[$key] ?? null;
-        $this->combatUntil[$key] = 0;
-        unset($this->combatOpponent[$key]);
-        Manager::COOLDOWN()->remove($player->getName(), 'combat');
-        $this->clearBarrier($player);
-
-        if ($opponent !== null && (($this->combatOpponent[$opponent] ?? null) === $key)) {
-            unset($this->combatOpponent[$opponent]);
-            $this->combatUntil[$opponent] = 0;
-            $opponentPlayer = Server::getInstance()->getPlayerExact($this->names[$opponent] ?? $opponent);
-            if ($opponentPlayer instanceof Player) {
-                Manager::COOLDOWN()->remove($opponentPlayer->getName(), 'combat');
-                $this->clearBarrier($opponentPlayer);
-            }
-        }
-
-        $this->refreshAllVisibility();
-    }
-
-    private function activeOpponent(Player $player): ?string  {
-        if (!$this->isInCombat($player)) {
-            return null;
-        }
-        $opponent = $this->combatOpponent[strtolower($player->getName())] ?? null;
-        if ($opponent === null) {
-            return null;
-        }
-        $target = Server::getInstance()->getPlayerExact($this->names[$opponent] ?? $opponent);
-        return $target instanceof Player && $this->isInCombat($target) ? strtolower($target->getName()) : null;
-    }
-
-    private function refreshAllVisibility(): void  {
-        array_map(function (Player $player) {
-            $this->refreshVisibility($player);
-        }, Server::getInstance()->getOnlinePlayers());
-    }
-
-    private function refreshVisibility(Player $viewer): void  {
-        $viewerKey = strtolower($viewer->getName());
-        $hideLobbyPlayers = ($this->insideFfa[$viewerKey] ?? false) && ($this->hideLobbyPlayers[$viewerKey] ?? false);
-        $enabled = Manager::SETTINGS()->hasCombatVisibility($viewer->getName());
-        $opponentKey = $enabled ? $this->activeOpponent($viewer) : null;
-
-        foreach (Server::getInstance()->getOnlinePlayers() as $target) {
-            if ($target === $viewer) {
-                continue;
-            }
-            if (!$hideLobbyPlayers && ($opponentKey === null || strtolower($target->getName()) === $opponentKey)) {
-                $viewer->showPlayer($target);
-            } else {
-                $viewer->hidePlayer($target);
-            }
-        }
-    }
-
-    private function nearestEnemy(Player $player, float $range): ?Player  {
-        $nearest = null;
-        $best = $range * $range;
-        foreach ($player->getWorld()->getPlayers() as $candidate) {
-            if ($candidate === $player || !$candidate->isAlive()) {
-                continue;
-            }
-            $distance = $candidate->getPosition()->distanceSquared($player->getPosition());
-            if ($distance < $best) {
-                $best = $distance;
-                $nearest = $candidate;
-            }
-        }
-        return $nearest;
-    }
-
-    private function applyInstantPotion(Player $player, PotionType $type): void  {
-        if ($type === PotionType::HEALING()) {
-            $player->setHealth(min($player->getMaxHealth(), $player->getHealth() + 4.0));
-        } elseif ($type === PotionType::STRONG_HEALING()) {
-            $player->setHealth(min($player->getMaxHealth(), $player->getHealth() + 8.0));
-        }
-    }
-
-    private function addPotionParticle(Player $player): void  { # TODO: overwrite potion item
-        $color = Manager::SETTINGS()->getPotionParticleColor($player->getName());
-        $particle = $color === null
-            ? new PotionSplashParticle(PotionSplashParticle::DEFAULT_COLOR())
-            : new PotionSplashParticle($color);
-        $player->getWorld()->addParticle($player->getPosition(), $particle);
-    }
-
-    private function killMessage(Player $killer, Player $victim): string  { # TODO: Text manaer ?
-        $potion = VanillaItems::SPLASH_POTION()->setType(PotionType::STRONG_HEALING());
-        return '§9[Vision] §f' . $killer->getName() . ' §8[' . $this->countItems($killer, $potion) . '] §7a désintégré §f'
-            . $victim->getName() . ' §8[' . $this->countItems($victim, $potion) . ']§7.';
-    }
-
-    private function countItems(Player $player, Item $needle): int {  # TODO: into player
-        $count = 0;
-        foreach ($player->getInventory()->getContents() as $item) {
-            if ($item->equals($needle, false, false)) {
-                $count += $item->getCount();
-            }
-        }
-        return $count;
-    }
-
-    private function sendBarrierToward(Player $player, Position $pos): void { # TODO: CombatWallManager
-        $this->sendCombatWallTowardBoth($player, $pos);
-    }
-
-    private function sendCombatWallTowardBoth(Player $player, Position $pos): void  {
-        $this->sendCombatWallToward($player, $pos);
-        $opponentKey = $this->activeOpponent($player);
-        if ($opponentKey === null) {
-            return;
-        }
-        $opponent = Server::getInstance()->getPlayerExact($this->names[$opponentKey] ?? $opponentKey);
-        if ($opponent instanceof Player) {
-            $this->sendCombatWallToward($opponent, $pos);
-        }
-    }
-
-    private function sendCombatWallToward(Player $player, Position $pos): void  {
-        $bounds = Manager::FFA()->bounds();
-        if ($bounds === null || $pos->getWorld()->getFolderName() !== $bounds['world']) {
-            return;
-        }
-
-        $x = $pos->getFloorX();
-        $z = $pos->getFloorZ();
-        $d = self::DETECT_DISTANCE;
-        if ($x + $d >= $bounds['minX'] && $x <= $bounds['minX'] && $z >= $bounds['minZ'] && $z <= $bounds['maxZ']) {
-            $this->sendWall($player, 'east', $bounds, $pos);
-        } elseif ($x - $d <= $bounds['maxX'] && $x >= $bounds['maxX'] && $z >= $bounds['minZ'] && $z <= $bounds['maxZ']) {
-            $this->sendWall($player, 'west', $bounds, $pos);
-        } elseif ($z + $d >= $bounds['minZ'] && $z <= $bounds['minZ'] && $x >= $bounds['minX'] && $x <= $bounds['maxX']) {
-            $this->sendWall($player, 'south', $bounds, $pos);
-        } elseif ($z - $d <= $bounds['maxZ'] && $z >= $bounds['maxZ'] && $x >= $bounds['minX'] && $x <= $bounds['maxX']) {
-            $this->sendWall($player, 'north', $bounds, $pos);
-        }
-    }
-
-    private function sendWall(Player $player, string $side, array $bounds, Position $pos): void  {
-        $key = strtolower($player->getName());
-        $blockTranslator = TypeConverter::getInstance()->getBlockTranslator();
-        $glassId = $blockTranslator->internalIdToNetworkId(VanillaBlocks::STAINED_GLASS()->setColor(DyeColor::RED)->getStateId());
-        $baseY = $pos->getFloorY() - 1;
-        $positions = [];
-
-        if ($side === 'east' || $side === 'west') {
-            $wallX = $side === 'east' ? $bounds['minX'] - 1 : $bounds['maxX'] + 1;
-            for ($z = max($bounds['minZ'], $pos->getFloorZ() - 8); $z <= min($bounds['maxZ'], $pos->getFloorZ() + 8); ++$z) {
-                for ($y = $baseY; $y < $baseY + self::WALL_HEIGHT; ++$y) {
-                    $positions[] = [$wallX, $y, $z];
-                }
-            }
-        } else {
-            $wallZ = $side === 'south' ? $bounds['minZ'] - 1 : $bounds['maxZ'] + 1;
-            for ($x = max($bounds['minX'], $pos->getFloorX() - 8); $x <= min($bounds['maxX'], $pos->getFloorX() + 8); ++$x) {
-                for ($y = $baseY; $y < $baseY + self::WALL_HEIGHT; ++$y) {
-                    $positions[] = [$x, $y, $wallZ];
-                }
-            }
-        }
-
-        foreach ($positions as [$x, $y, $z]) {
-            $posKey = $x . ',' . $y . ',' . $z;
-            if (isset($this->sentBarrier[$key][$posKey])) {
-                continue;
-            }
-            $packet = UpdateBlockPacket::create(new BlockPosition($x, $y, $z), $glassId, UpdateBlockPacket::FLAG_NETWORK, UpdateBlockPacket::DATA_LAYER_NORMAL);
-            $player->getNetworkSession()->sendDataPacket($packet);
-            $this->sentBarrier[$key][$posKey] = true;
-        }
-    }
-
-    private function clearBarrier(Player $player): void  {
-        $key = strtolower($player->getName());
-        $blocks = $this->sentBarrier[$key] ?? [];
-        if ($blocks === []) {
-            return;
-        }
-        $translator = TypeConverter::getInstance()->getBlockTranslator();
-        foreach ($blocks as $posKey => $_) {
-            [$x, $y, $z] = array_map('intval', explode(',', $posKey));
-            $real = $player->getWorld()->getBlockAt($x, $y, $z);
-            $packet = UpdateBlockPacket::create(new BlockPosition($x, $y, $z), $translator->internalIdToNetworkId($real->getStateId()), UpdateBlockPacket::FLAG_NETWORK, UpdateBlockPacket::DATA_LAYER_NORMAL);
-            $player->getNetworkSession()->sendDataPacket($packet);
-        }
-        unset($this->sentBarrier[$key]);
-    }
 }
