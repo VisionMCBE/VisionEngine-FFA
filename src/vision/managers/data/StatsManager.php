@@ -55,9 +55,9 @@ final class StatsManager {
             . $victim->getName() . ' §8[' . $this->countItems($victim, $potion) . ']§7.';
     }
 
-    /** @return list<array{name: string, value: int}> */
+    /** @return list<array{name: string, value: int|float}> */
     public function top(string $stat, int $limit = 10): array  {
-        if ($stat !== 'kills' && $stat !== 'deaths') {
+        if (!in_array($stat, ['kills', 'deaths', 'kdr'], true)) {
             return [];
         }
 
@@ -66,9 +66,11 @@ final class StatsManager {
             if (!is_array($data)) {
                 continue;
             }
+            $kills = (int) ($data['kills'] ?? 0);
+            $deaths = (int) ($data['deaths'] ?? 0);
             $rows[] = [
                 'name' => (string) ($data['name'] ?? $key),
-                'value' => (int) ($data[$stat] ?? 0),
+                'value' => $stat === 'kdr' ? $kills / max(1, $deaths) : (int) ($data[$stat] ?? 0),
             ];
         }
         usort($rows, static fn(array $a, array $b): int => $b['value'] <=> $a['value']);

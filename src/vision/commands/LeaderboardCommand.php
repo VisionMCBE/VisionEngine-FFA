@@ -15,7 +15,7 @@ use vision\Main;
 
 final class LeaderboardCommand extends Command {
     public function __construct() {
-        parent::__construct('leaderboard', 'Permet de placer ou retirer les classements FFA.', '/leaderboard <kills|deaths|league|remove>');
+        parent::__construct('leaderboard', 'Permet de placer ou retirer les classements FFA.', '/leaderboard <kills|deaths|kdr|league|remove>');
         $this->setPermission(DefaultPermissions::ROOT_OPERATOR);
         $this->setPermissionMessage(Manager::BRANDING()->format('{prefix}{error}Commande réservée aux OP.'));
     }
@@ -28,9 +28,9 @@ final class LeaderboardCommand extends Command {
 
         $type = strtolower((string) ($args[0] ?? ''));
         $type = $type === 'ligue' ? 'league' : $type;
-        if ($type === 'kills' || $type === 'deaths' || $type === 'league') {
+        if ($type === 'kills' || $type === 'deaths' || $type === 'kdr' || $type === 'league') {
             Manager::LEADERBOARD()->place($type, $sender);
-            $labels = ['kills' => 'des kills', 'deaths' => 'des morts', 'league' => 'des ligues'];
+            $labels = ['kills' => 'des kills', 'deaths' => 'des morts', 'kdr' => 'du ratio K/D', 'league' => 'des ligues'];
             $sender->sendMessage('§9Le classement ' . $labels[$type] . ' a été placé à votre position.');
             return;
         }
@@ -42,6 +42,6 @@ final class LeaderboardCommand extends Command {
             return;
         }
 
-        $sender->sendMessage('§7Utilisation : §9/leaderboard <kills|deaths|league|remove>');
+        $sender->sendMessage('§7Utilisation : §9/leaderboard <kills|deaths|kdr|league|remove>');
     }
 }

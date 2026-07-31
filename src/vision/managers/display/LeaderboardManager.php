@@ -76,13 +76,14 @@ final class LeaderboardManager {
     private function refreshOne(string $key, array $data): void  {
         $world = $this->plugin->getServer()->getWorldManager()->getWorldByName((string) ($data['world'] ?? ''));
         $type = (string) ($data['type'] ?? '');
-        if ($world === null || !in_array($type, ['kills', 'deaths', 'league'], true)) {
+        if ($world === null || !in_array($type, ['kills', 'deaths', 'kdr', 'league'], true)) {
             return;
         }
 
         $title = match ($type) {
             'kills' => '§l§9TOP KILLS',
             'deaths' => '§l§9TOP MORTS',
+            'kdr' => '§l§9TOP K/D',
             default => '§l§9TOP LIGUES',
         };
         $lines = [];
@@ -92,7 +93,7 @@ final class LeaderboardManager {
             $color = $rank === 1 ? '§6' : ($rank === 2 ? '§7' : ($rank === 3 ? '§c' : '§f'));
             $suffix = $type === 'league'
                 ? ' §8- ' . $row['color'] . $row['league'] . ' §8(§9' . $row['value'] . '§8)'
-                : ' §8- §9' . $row['value'];
+                : ' §8- §9' . ($type === 'kdr' ? number_format((float) $row['value'], 2, '.', '') : $row['value']);
             $lines[] = $color . $rank . '. §f' . $row['name'] . $suffix;
         }
         if ($lines === []) {
