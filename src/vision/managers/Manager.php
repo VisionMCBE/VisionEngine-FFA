@@ -12,11 +12,13 @@ use vision\managers\data\SettingsManager;
 use vision\managers\data\StatsManager;
 use vision\managers\display\BrandingManager;
 use vision\managers\display\LeaderboardManager;
+use vision\managers\display\NameTagManager;
 use vision\managers\display\ScoreboardManager;
 use vision\managers\player\CooldownManager;
 use vision\managers\player\CombatManager;
 use vision\managers\player\FFAManager;
 use vision\managers\player\KnockbackManager;
+use vision\managers\player\MatchManager;
 use vision\managers\player\PotionManager;
 use vision\managers\player\RankManager;
 use vision\managers\resource\PackManager;
@@ -28,12 +30,14 @@ use vision\managers\security\AntiCheatManager;
  * @method static CooldownManager COOLDOWN()
  * @method static CombatManager COMBAT()
  * @method static KnockbackManager KNOCKBACK()
+ * @method static MatchManager MATCH()
  * @method static PotionManager POTION()
  * @method static ScoreboardManager SCOREBOARD()
  * @method static SettingsManager SETTINGS()
  * @method static StatsManager STATS()
  * @method static EloManager ELO()
  * @method static LeaderboardManager LEADERBOARD()
+ * @method static NameTagManager NAMETAG()
  * @method static FFAManager FFA()
  * @method static AntiCheatManager ANTICHEAT()
  * @method static PackManager PACK()
@@ -51,12 +55,14 @@ final class Manager {
         self::$registrants['COOLDOWN'] = new CooldownManager();
         self::$registrants['COMBAT'] = new CombatManager();
         self::$registrants['KNOCKBACK'] = new KnockbackManager($plugin);
+        self::$registrants['MATCH'] = new MatchManager();
         self::$registrants['POTION'] = new PotionManager();
         self::$registrants['SCOREBOARD'] = new ScoreboardManager();
         self::$registrants['SETTINGS'] = new SettingsManager($plugin);
         self::$registrants['STATS'] = new StatsManager($plugin);
         self::$registrants['ELO'] = new EloManager($plugin);
         self::$registrants['LEADERBOARD'] = new LeaderboardManager($plugin);
+        self::$registrants['NAMETAG'] = new NameTagManager();
         self::$registrants['FFA'] = new FFAManager($plugin);
         self::$registrants['ANTICHEAT'] = new AntiCheatManager();
         self::$registrants['PACK'] = new PackManager($plugin);

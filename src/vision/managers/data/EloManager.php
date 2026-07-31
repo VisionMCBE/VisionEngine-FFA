@@ -48,24 +48,33 @@ final class EloManager {
         return max(0, (int) $this->config->getNested(strtolower($player) . '.elo', 0));
     }
 
-    /** @return array{winner_gain: int, loser_loss: int, winner_old_league: string, loser_old_league: string, anti_farm: bool} */
-    public function recordKill(string $winner, string $loser): array  {
+    /** @return array{winner_gain: int, loser_loss: int, streak_bonus: int, winner_old_league: string, loser_old_league: string, anti_farm: bool} */
+    public function recordKill(string $winner, string $loser, int $loserStreak = 0): array  {
         $winnerElo = $this->get($winner);
         $loserElo = $this->get($loser);
         $expected = 1.0 / (1.0 + pow(10.0, ($loserElo - $winnerElo) / 400.0));
         $change = max(18, min(36, (int) round(36.0 * (1.0 - $expected))));
         $multiplier = $this->antiFarmMultiplier($winner, $loser);
         $change = max(1, (int) round($change * $multiplier));
+        $streakMultiplier = match (true) {
+            $loserStreak >= 15 => 0.5,
+            $loserStreak >= 10 => 0.35,
+            $loserStreak >= 5 => 0.2,
+            default => 0.0,
+        };
+        $streakBonus = (int) round($change * $streakMultiplier);
+        $winnerGain = $change + $streakBonus;
         $loss = min($loserElo, $change);
         $winnerLeague = $this->league($winnerElo)['name'];
         $loserLeague = $this->league($loserElo)['name'];
 
-        $this->set($winner, $winnerElo + $change);
+        $this->set($winner, $winnerElo + $winnerGain);
         $this->set($loser, $loserElo - $loss);
 
         return [
-            'winner_gain' => $change,
+            'winner_gain' => $winnerGain,
             'loser_loss' => $loss,
+            'streak_bonus' => $streakBonus,
             'winner_old_league' => $winnerLeague,
             'loser_old_league' => $loserLeague,
             'anti_farm' => $multiplier < 1.0,

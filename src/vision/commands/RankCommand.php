@@ -50,8 +50,7 @@ final class RankCommand extends Command {
         $component = Manager::RANK()->rank($rank);
 
         if ($target instanceof Player) {
-            $target->setNameTag($component->getColor() . $component->getName()
-                . Manager::BRANDING()->format(' {secondary}') . $target->getName());
+            Manager::NAMETAG()->update($target);
         }
 
         $durationText = $duration === null ? ' de manière permanente' : ' pendant ' . $this->formatDuration($duration);

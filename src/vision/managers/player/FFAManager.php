@@ -24,7 +24,7 @@ final class FFAManager {
     public const LOBBY_TAG = 'vision_lobby_item';
     private Config $config;
 
-    public function __construct(Main $plugin)  {
+    public function __construct(private readonly Main $plugin)  {
         $this->config = new Config($plugin->getDataFolder() . 'kitffa.json', Config::JSON, []);
     }
 
@@ -66,6 +66,7 @@ final class FFAManager {
     }
 
     public function giveKit(Player $player): void  {
+        $player->setHealth($player->getMaxHealth());
         $parser = StringToItemParser::getInstance();
         $sword = $parser->parse('visionengine:visionne_sword') ?? VanillaItems::DIAMOND_SWORD();
         $sword->setCustomName(Manager::BRANDING()->itemText('kit_names.sword', '§r{primary}Épée FFA'));
@@ -107,6 +108,25 @@ final class FFAManager {
         $player->getEffects()->add(new EffectInstance(VanillaEffects::STRENGTH(), $duration, 1, false));
         $player->getEffects()->add(new EffectInstance(VanillaEffects::RESISTANCE(), $duration, 0, false));
         $player->getEffects()->add(new EffectInstance(VanillaEffects::SPEED(), $duration, 1, false));
+    }
+
+    public function spawnPosition(): ?Position {
+        $bounds = $this->bounds();
+        if ($bounds === null) {
+            return null;
+        }
+        $worldManager = $this->plugin->getServer()->getWorldManager();
+        $worldManager->loadWorld($bounds['world']);
+        $world = $worldManager->getWorldByName($bounds['world']);
+        if ($world === null) {
+            return null;
+        }
+        return new Position(
+            (($bounds['minX'] + $bounds['maxX']) / 2) + 0.5,
+            (($bounds['minY'] + $bounds['maxY']) / 2) + 1,
+            (($bounds['minZ'] + $bounds['maxZ']) / 2) + 0.5,
+            $world
+        );
     }
 
     public function giveLobbyItems(Player $player, bool $playersHidden = false): void  {

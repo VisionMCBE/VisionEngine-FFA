@@ -14,6 +14,7 @@ use vision\managers\Manager;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\entity\ProjectileLaunchEvent;
 use pocketmine\event\Listener;
@@ -24,6 +25,7 @@ use pocketmine\event\player\PlayerItemUseEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\item\SplashPotion as SplashPotionItem;
 use pocketmine\item\VanillaItems;
 use pocketmine\player\GameMode;
@@ -64,8 +66,7 @@ final class PlayerListeners implements Listener {
             Manager::FFA()->giveLobbyItems($player);
         }
         
-        $rank = Manager::RANK()->getPlayerRank($player->getName());
-        $player->setNameTag($rank->getColor() . $rank->getName() . Manager::BRANDING()->format(' {secondary}') . $player->getName());
+        Manager::NAMETAG()->update($player);
         Server::getInstance()->broadcastTip(Manager::BRANDING()->format('{success}+ ') . $player->getName() . Manager::BRANDING()->format(' {success}+'));
 
         if ($isFirstJoin) {
@@ -79,29 +80,24 @@ final class PlayerListeners implements Listener {
         $player = $event->getPlayer();
         $event->setQuitMessage('');
         Manager::SCOREBOARD()->remove($player);
+        Manager::NAMETAG()->remove($player);
 
         $opponent = Manager::COMBAT()->opponent($player);
         if ($opponent !== null) {
-            Manager::STATS()->addDeath($player->getName());
-            Manager::STATS()->addKill($opponent->getName());
-            $eloChange = Manager::ELO()->recordKill($opponent->getName(), $player->getName());
-            $league = Manager::ELO()->league($opponent->getName());
-            $opponent->sendPopup('§aVictoire par abandon : +' . $eloChange['winner_gain'] . ' ELO §8- '
-                . $league['color'] . $league['name'] . ($eloChange['anti_farm'] ? ' §c(Anti-farm)' : ''));
-            if ($league['name'] !== $eloChange['winner_old_league']) {
-                $opponent->sendTitle('§9§lPROMOTION', $league['color'] . $league['name'], 10, 50, 15);
-            }
-            Manager::FFA()->giveKit($opponent);
-            Server::getInstance()->broadcastMessage(Manager::BRANDING()->format('{prefix}{primary}') . $player->getName()
-                . Manager::BRANDING()->format(' {secondary}a perdu son combat en se déconnectant face à {primary}')
-                . $opponent->getName() . Manager::BRANDING()->format('{secondary}.'));
-            Manager::COMBAT()->end($player);
+            Manager::MATCH()->resolve($opponent, $player, true);
         }
 
         Manager::COMBAT()->unregister($player);
         Server::getInstance()->broadcastTip(Manager::BRANDING()->format('{error}- ') . $player->getName() . Manager::BRANDING()->format(' {error}-'));
     }
 
+    public function handleEntityDamageEvent(EntityDamageEvent $event): void {
+        if ($event->getEntity() instanceof Player && $event->getCause() === EntityDamageEvent::CAUSE_FALL) {
+            $event->cancel();
+        }
+    }
+
+    /** @priority HIGHEST */
     public function handleEntityDamageByEntityEvent(EntityDamageByEntityEvent $event): void  {
         Manager::KNOCKBACK()->apply($event);
 
@@ -127,6 +123,29 @@ final class PlayerListeners implements Listener {
         }
 
         Manager::COMBAT()->start($victim, $damager);
+        $remainingHealth = $victim->getHealth() - $event->getFinalDamage();
+        if ($remainingHealth > 0.0) {
+            Manager::NAMETAG()->update($victim, $remainingHealth);
+            return;
+        }
+
+        $event->cancel();
+        $victim->setHealth($victim->getMaxHealth());
+        Manager::MATCH()->resolve($damager, $victim);
+        $spawn = Manager::FFA()->spawnPosition();
+        if ($spawn !== null) {
+            $victim->teleport($spawn);
+        }
+        Manager::FFA()->clearCombatEffects($victim);
+        Manager::COMBAT()->setLobbyHidden($victim, false);
+        Manager::COMBAT()->setInside($victim, true);
+        Manager::FFA()->giveLobbyItems($victim);
+        Manager::COMBAT()->refreshAllVisibility();
+        Manager::NAMETAG()->update($victim);
+    }
+
+    public function handlePlayerRespawnEvent(PlayerRespawnEvent $event): void {
+        Manager::NAMETAG()->update($event->getPlayer(), $event->getPlayer()->getMaxHealth());
     }
 
     public function handlePlayerChatEvent(PlayerChatEvent $event): void  {
@@ -145,32 +164,15 @@ final class PlayerListeners implements Listener {
         $event->setDrops([]);
         $event->setXpDropAmount(0);
         $event->setDeathMessage('');
-        Manager::STATS()->addDeath($victim->getName());
         $cause = $victim->getLastDamageCause();
         if ($cause instanceof EntityDamageByEntityEvent && $cause->getDamager() instanceof Player) {
             $killer = $cause->getDamager();
             if ($killer !== $victim) {
-                $message = Manager::STATS()->killMessage($killer, $victim);
-                Manager::COMBAT()->end($killer);
-                Manager::COMBAT()->end($victim);
-                Manager::STATS()->addKill($killer->getName());
-                $eloChange = Manager::ELO()->recordKill($killer->getName(), $victim->getName());
-                $killerLeague = Manager::ELO()->league($killer->getName());
-                $victimLeague = Manager::ELO()->league($victim->getName());
-                $killer->sendPopup('§aVictoire : +' . $eloChange['winner_gain'] . ' ELO §8- ' . $killerLeague['color'] . $killerLeague['name']
-                    . ($eloChange['anti_farm'] ? ' §c(Anti-farm)' : ''));
-                $victim->sendPopup('§cDéfaite : -' . $eloChange['loser_loss'] . ' ELO §8- ' . $victimLeague['color'] . $victimLeague['name']);
-                if ($killerLeague['name'] !== $eloChange['winner_old_league']) {
-                    $killer->sendTitle('§9§lPROMOTION', $killerLeague['color'] . $killerLeague['name'], 10, 50, 15);
-                }
-                if ($victimLeague['name'] !== $eloChange['loser_old_league']) {
-                    $victim->sendTitle('§c§lRÉTROGRADATION', $victimLeague['color'] . $victimLeague['name'], 10, 50, 15);
-                }
-                Server::getInstance()->broadcastMessage($message);
-                Manager::FFA()->giveKit($killer);
-                $killer->sendMessage(Manager::BRANDING()->format('{prefix}{success}Votre kit a été entièrement réapprovisionné.'));
+                Manager::MATCH()->resolve($killer, $victim);
+                return;
             }
         }
+        Manager::STATS()->addDeath($victim->getName());
     }
 
     public function handlePlayerItemUseEvent(PlayerItemUseEvent $event): void  {

@@ -26,5 +26,6 @@ final class PotionManager {
         } elseif ($type === PotionType::STRONG_HEALING()) {
             $player->setHealth(min($player->getMaxHealth(), $player->getHealth() + 8.0));
         }
+        Manager::NAMETAG()->update($player);
     }
 }
