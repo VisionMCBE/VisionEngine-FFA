@@ -149,6 +149,7 @@ final class CombatManager {
 
     public function refreshVisibility(Player $viewer): void {
         $viewerKey = strtolower($viewer->getName());
+        $viewerInAiFight = Manager::AIFIGHT()->isFighting($viewer);
         $hideLobbyPlayers = ($this->insideFfa[$viewerKey] ?? false) && ($this->hideLobbyPlayers[$viewerKey] ?? false);
         $opponentKey = Manager::SETTINGS()->hasCombatVisibility($viewer->getName()) ? $this->activeOpponent($viewer) : null;
 
@@ -156,7 +157,8 @@ final class CombatManager {
             if ($target === $viewer) {
                 continue;
             }
-            if (!$hideLobbyPlayers && ($opponentKey === null || strtolower($target->getName()) === $opponentKey)) {
+            if (!$viewerInAiFight && !Manager::AIFIGHT()->isFighting($target)
+                && !$hideLobbyPlayers && ($opponentKey === null || strtolower($target->getName()) === $opponentKey)) {
                 $viewer->showPlayer($target);
             } else {
                 $viewer->hidePlayer($target);

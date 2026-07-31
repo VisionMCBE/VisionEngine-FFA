@@ -18,7 +18,7 @@ final class BrandingManager {
     }
 
     public function serverIp(): string  {
-        return (string) $this->plugin->getConfig()->getNested('server.ip', '13.140.129.97:19132');
+        return (string) $this->plugin->getConfig()->getNested('server.ip', 'visionfr.mcbe.best:19132');
     }
 
     public function motd(): string  {

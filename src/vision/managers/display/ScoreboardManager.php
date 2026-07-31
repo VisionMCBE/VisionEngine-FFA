@@ -79,9 +79,24 @@ final class ScoreboardManager {
 
     private function line(Player $player, int $line, string $content): void  {
         $key = strtolower($player->getName());
-        if (($this->lines[$key][$line] ?? null) === $content) {
+        $previous = $this->lines[$key][$line] ?? null;
+        if ($previous === $content) {
             return;
         }
+
+        if ($previous !== null) {
+            $oldEntry = new ScorePacketEntry();
+            $oldEntry->objectiveName = 'objective';
+            $oldEntry->type = ScorePacketEntry::TYPE_FAKE_PLAYER;
+            $oldEntry->customName = $previous;
+            $oldEntry->score = $line;
+            $oldEntry->scoreboardId = $line;
+            $removePacket = new SetScorePacket();
+            $removePacket->type = SetScorePacket::TYPE_REMOVE;
+            $removePacket->entries[] = $oldEntry;
+            $player->getNetworkSession()->sendDataPacket($removePacket);
+        }
+
         $this->lines[$key][$line] = $content;
 
         $entry = new ScorePacketEntry();

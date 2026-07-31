@@ -15,6 +15,7 @@ use vision\managers\display\LeaderboardManager;
 use vision\managers\display\NameTagManager;
 use vision\managers\display\ScoreboardManager;
 use vision\managers\player\CooldownManager;
+use vision\managers\player\AIFightManager;
 use vision\managers\player\CombatManager;
 use vision\managers\player\FFAManager;
 use vision\managers\player\KnockbackManager;
@@ -28,6 +29,7 @@ use vision\managers\security\AntiCheatManager;
  * @method static BrandingManager BRANDING()
  * @method static RankManager RANK()
  * @method static CooldownManager COOLDOWN()
+ * @method static AIFightManager AIFIGHT()
  * @method static CombatManager COMBAT()
  * @method static KnockbackManager KNOCKBACK()
  * @method static MatchManager MATCH()
@@ -54,6 +56,7 @@ final class Manager {
         self::RANK()->initSchema();
         self::$registrants['COOLDOWN'] = new CooldownManager();
         self::$registrants['COMBAT'] = new CombatManager();
+        self::$registrants['AIFIGHT'] = new AIFightManager();
         self::$registrants['KNOCKBACK'] = new KnockbackManager($plugin);
         self::$registrants['MATCH'] = new MatchManager();
         self::$registrants['POTION'] = new PotionManager();

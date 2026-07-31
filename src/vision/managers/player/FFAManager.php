@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace vision\managers\player;
 
+use pocketmine\entity\effect\VanillaEffects;
 use vision\managers\Manager;
 
 use pocketmine\block\utils\DyeColor;
@@ -13,8 +14,6 @@ use pocketmine\item\PotionType;
 use pocketmine\item\StringToItemParser;
 use pocketmine\item\Item;
 use pocketmine\item\VanillaItems;
-use pocketmine\entity\effect\VanillaEffects;
-use pocketmine\entity\effect\EffectInstance;
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
 use pocketmine\world\Position;
@@ -104,10 +103,6 @@ final class FFAManager {
         foreach ($armor as $item) {
             $player->getArmorInventory()->setItem($item->getArmorSlot(), $item);
         }
-        $duration = 20 * 60 * 60 * 24;
-        $player->getEffects()->add(new EffectInstance(VanillaEffects::STRENGTH(), $duration, 1, false));
-        $player->getEffects()->add(new EffectInstance(VanillaEffects::RESISTANCE(), $duration, 0, false));
-        $player->getEffects()->add(new EffectInstance(VanillaEffects::SPEED(), $duration, 1, false));
     }
 
     public function spawnPosition(): ?Position {

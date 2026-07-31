@@ -24,6 +24,10 @@ final class RekitCommand extends Command {
             $sender->sendMessage('Cette commande doit être utilisée en jeu.');
             return;
         }
+        if (Manager::COMBAT()->isInCombat($sender) || Manager::AIFIGHT()->isFighting($sender)) {
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Vous ne pouvez pas utiliser cette commande pendant un combat.'));
+            return;
+        }
 
         if (Manager::FFA()->isInside($sender->getPosition())) {
             $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Vous devez quitter la zone protégée avant de pouvoir récupérer votre kit.'));

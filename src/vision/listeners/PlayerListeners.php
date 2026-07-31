@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace vision\listeners;
 
 use pocketmine\entity\projectile\EnderPearl;
+use pocketmine\entity\projectile\SplashPotion as SplashPotionProjectile;
 use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
 use pocketmine\network\mcpe\protocol\types\BoolGameRule;
 use pocketmine\Server;
@@ -15,7 +16,10 @@ use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityTeleportEvent;
+use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
+use pocketmine\event\entity\ProjectileHitEvent;
 use pocketmine\event\entity\ProjectileLaunchEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerChatEvent;
@@ -30,6 +34,7 @@ use pocketmine\item\SplashPotion as SplashPotionItem;
 use pocketmine\item\VanillaItems;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
+use pocketmine\world\Position;
 use vision\Main;
 
 use vision\services\chat\CustomChatFormatter;
@@ -37,6 +42,11 @@ use function count;
 use function glob;
 
 final class PlayerListeners implements Listener {
+    /** @var array<string, int> */
+    private array $blockedPearlTeleports = [];
+    /** @var array<string, int> */
+    private array $blockedExternalHealing = [];
+
     public function __construct(private readonly Main $plugin) {}
 
     public function handleBlockBreakEvent(BlockBreakEvent $event): void  {
@@ -77,6 +87,7 @@ final class PlayerListeners implements Listener {
     }
 
     public function handlePlayerQuitEvent(PlayerQuitEvent $event): void  {
+        unset($this->blockedPearlTeleports[strtolower($event->getPlayer()->getName())]);
         $player = $event->getPlayer();
         $event->setQuitMessage('');
         Manager::SCOREBOARD()->remove($player);
@@ -104,6 +115,11 @@ final class PlayerListeners implements Listener {
         $victim = $event->getEntity();
         $damager = $event->getDamager();
         if (!$victim instanceof Player || !$damager instanceof Player || $event->isCancelled()) {
+            return;
+        }
+
+        if (Manager::AIFIGHT()->isFighting($victim) || Manager::AIFIGHT()->isFighting($damager)) {
+            $event->cancel();
             return;
         }
 
@@ -178,7 +194,8 @@ final class PlayerListeners implements Listener {
     public function handlePlayerItemUseEvent(PlayerItemUseEvent $event): void  {
         $item = $event->getItem();
         $player = $event->getPlayer();
-        if ($item instanceof SplashPotionItem && Manager::SETTINGS()->hasGuidedPotions($player->getName())) {
+        if ($item instanceof SplashPotionItem && Manager::SETTINGS()->hasGuidedPotions($player->getName())
+            && !Manager::AIFIGHT()->isFighting($player)) {
             $event->cancel();
             $beforeUse = $player->getInventory()->getItemInHand();
             if (!$beforeUse->equalsExact($item)) {
@@ -229,6 +246,12 @@ final class PlayerListeners implements Listener {
         $fromInside = Manager::FFA()->isInside($event->getFrom());
         $toInside = Manager::FFA()->isInside($event->getTo());
 
+        if (!$fromInside && $toInside && Manager::AIFIGHT()->isFighting($player)) {
+            $event->cancel();
+            $player->sendTip(Manager::BRANDING()->format('{error}Terminez votre combat contre l\'IA avant de retourner dans la zone KitFFA.'));
+            return;
+        }
+
         if (!$fromInside && $toInside && Manager::COMBAT()->isInCombat($player)) {
             $event->cancel();
             $player->sendTip(Manager::BRANDING()->format('{error}Vous ne pouvez pas entrer dans la zone protégée pendant un combat.'));
@@ -274,6 +297,67 @@ final class PlayerListeners implements Listener {
             return;
         }
         Manager::COOLDOWN()->add($owner->getName(), 'pearl', 15);
+    }
+
+    public function handleProjectileHitEvent(ProjectileHitEvent $event): void {
+        $projectile = $event->getEntity();
+        $owner = $projectile->getOwningEntity();
+        if ($projectile instanceof SplashPotionProjectile && $owner instanceof Player
+            && ($projectile->getPotionType() === \pocketmine\item\PotionType::HEALING()
+                || $projectile->getPotionType() === \pocketmine\item\PotionType::STRONG_HEALING())) {
+            $tick = Server::getInstance()->getTick();
+            $ownerKey = strtolower($owner->getName());
+            $area = $projectile->getBoundingBox()->expandedCopy(4.125, 2.125, 4.125);
+            foreach ($projectile->getWorld()->getCollidingEntities($area, $projectile) as $entity) {
+                if (!$entity instanceof Player || $entity === $owner) {
+                    continue;
+                }
+                $targetKey = strtolower($entity->getName());
+                $opponent = Manager::COMBAT()->activeOpponent($entity);
+                $protected = Manager::COMBAT()->isInCombat($entity) || Manager::AIFIGHT()->isFighting($entity);
+                if ($protected && $opponent !== $ownerKey) {
+                    $this->blockedExternalHealing[$targetKey] = $tick;
+                }
+            }
+        }
+        if (!$projectile instanceof EnderPearl || !$owner instanceof Player
+            || Manager::FFA()->isInside($owner->getPosition())) {
+            return;
+        }
+        $hit = $event->getRayTraceResult()->getHitVector();
+        $destination = new Position($hit->getX(), $hit->getY(), $hit->getZ(), $projectile->getWorld());
+        if (!Manager::FFA()->isInside($destination)) {
+            return;
+        }
+        $this->blockedPearlTeleports[strtolower($owner->getName())] = Server::getInstance()->getTick() + 1;
+        $owner->sendMessage(Manager::BRANDING()->format('{prefix}{error}Vous ne pouvez pas utiliser une perle de l’End pour entrer dans la zone KitFFA.'));
+    }
+
+    public function handleEntityRegainHealthEvent(EntityRegainHealthEvent $event): void {
+        $player = $event->getEntity();
+        if (!$player instanceof Player) {
+            return;
+        }
+        $key = strtolower($player->getName());
+        if (($this->blockedExternalHealing[$key] ?? -1) !== Server::getInstance()->getTick()) {
+            return;
+        }
+        unset($this->blockedExternalHealing[$key]);
+        $event->cancel();
+    }
+
+    public function handleEntityTeleportEvent(EntityTeleportEvent $event): void {
+        $player = $event->getEntity();
+        if (!$player instanceof Player) {
+            return;
+        }
+        $key = strtolower($player->getName());
+        if (($this->blockedPearlTeleports[$key] ?? -1) < Server::getInstance()->getTick()
+            || !Manager::FFA()->isInside($event->getTo())) {
+            return;
+        }
+        unset($this->blockedPearlTeleports[$key]);
+        $event->cancel();
     }
 
 }

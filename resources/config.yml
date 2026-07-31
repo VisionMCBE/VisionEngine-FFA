@@ -1,7 +1,7 @@
 server:
   name: "Vision"
   mode_name: "FFA"
-  ip: "13.140.129.97:19132"
+  ip: "visionfr.mcbe.best:19132"
   motd: "{primary}{server_name} {mode_name}{secondary} - KitFFA"
 
 colors:

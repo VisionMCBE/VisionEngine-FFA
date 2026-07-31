@@ -25,6 +25,10 @@ final class SettingsCommand extends Command {
             $sender->sendMessage('Cette commande doit être utilisée en jeu.');
             return;
         }
+        if (Manager::COMBAT()->isInCombat($sender) || Manager::AIFIGHT()->isFighting($sender)) {
+            $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Vous ne pouvez pas utiliser cette commande pendant un combat.'));
+            return;
+        }
 
         SettingsForm::open($sender);
     }

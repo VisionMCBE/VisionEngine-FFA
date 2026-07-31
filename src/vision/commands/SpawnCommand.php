@@ -22,7 +22,7 @@ final class SpawnCommand extends Command {
             return;
         }
 
-        if (Manager::COMBAT()->isInCombat($sender)) {
+        if (Manager::COMBAT()->isInCombat($sender) || Manager::AIFIGHT()->isFighting($sender)) {
             $sender->sendMessage(Manager::BRANDING()->format('{prefix}{error}Vous ne pouvez pas vous téléporter au spawn pendant un combat.'));
             return;
         }

@@ -9,6 +9,7 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\ServerProperties;
 use pocketmine\utils\SingletonTrait;
 use vision\commands\KitFFACommand;
+use vision\commands\AIFightCommand;
 use vision\commands\LeaderboardCommand;
 use vision\commands\MaintenanceCommand;
 use vision\commands\RekitCommand;
@@ -46,6 +47,7 @@ final class Main extends PluginBase {
         $this->removeNonOpVanillaCommands();
 
         $map->registerAll($this->getName(), [
+            new AIFightCommand(),
             new KitFFACommand(),
             new LeaderboardCommand(),
             new MaintenanceCommand($this),
@@ -61,6 +63,7 @@ final class Main extends PluginBase {
 
         foreach ([
             new PlayerListeners($this),
+            Manager::AIFIGHT(),
             Manager::ANTICHEAT(),
             Manager::PACK(),
             ] as $listener) {
