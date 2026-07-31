@@ -154,7 +154,6 @@ final class AntiCheatManager implements Listener {
 
     private function shouldCheck(Player $player): bool  {
         return $player->isConnected()
-            && !$player->getServer()->isOp($player->getName())
             && !$player->getGamemode()->equals(GameMode::CREATIVE())
             && !$player->getGamemode()->equals(GameMode::SPECTATOR());
     }
@@ -165,11 +164,7 @@ final class AntiCheatManager implements Listener {
             return;
         }
 
-        $base = 0.38;
-        $speed = $player->getEffects()->get(VanillaEffects::SPEED());
-        if ($speed !== null) {
-            $base += 0.08 * $speed->getEffectLevel();
-        }
+        $base = max(0.38, $player->getMovementSpeed() * 3.8);
         if (!$player->isOnGround()) {
             $base += 0.12;
         }
@@ -186,7 +181,10 @@ final class AntiCheatManager implements Listener {
     }
 
     private function checkFly(Player $player, array &$st, int $tick, float $dy): void  {
-        if ($player->isOnGround() || $this->inLiquid($player) || $this->onClimbable($player) || $tick < $st['tpExempt'] || $tick < $st['kbExempt']) {
+        $effects = $player->getEffects();
+        if ($player->isOnGround() || $this->inLiquid($player) || $this->onClimbable($player)
+            || $effects->has(VanillaEffects::LEVITATION()) || $effects->has(VanillaEffects::SLOW_FALLING())
+            || $tick < $st['tpExempt'] || $tick < $st['kbExempt']) {
             $st['air'] = 0;
             $st['flyViol'] = 0.0;
             $st['prevDy'] = $dy;
@@ -195,7 +193,9 @@ final class AntiCheatManager implements Listener {
 
         ++$st['air'];
         $expected = ($st['prevDy'] - self::GRAVITY) * self::VERT_DRAG;
-        if ($st['air'] > self::FLY_GRACE && $dy > $expected + self::FLY_TOLERANCE) {
+        $jumpBoost = $effects->get(VanillaEffects::JUMP_BOOST());
+        $verticalTolerance = self::FLY_TOLERANCE + min(2.0, ($jumpBoost?->getEffectLevel() ?? 0) / 10);
+        if ($st['air'] > self::FLY_GRACE && $dy > $expected + $verticalTolerance) {
             $st['flyViol'] += 1.0;
             if ($st['flyViol'] >= self::FLY_LIMIT) {
                 $st['flyViol'] = 0.0;
@@ -299,7 +299,7 @@ final class AntiCheatManager implements Listener {
     }
 
     private function flag(Player $player, string $check, string $details): void  {
-        if (!$player->isConnected() || $player->getServer()->isOp($player->getName())) {
+        if (!$player->isConnected()) {
             return;
         }
 
