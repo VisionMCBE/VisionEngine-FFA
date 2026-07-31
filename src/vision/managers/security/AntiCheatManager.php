@@ -9,7 +9,6 @@ use vision\managers\Manager;
 
 use pocketmine\block\Ladder;
 use pocketmine\block\Liquid;
-use pocketmine\block\utils\Fallable;
 use pocketmine\entity\effect\VanillaEffects;
 use pocketmine\entity\Entity;
 use pocketmine\event\block\BlockBreakEvent;
@@ -18,7 +17,6 @@ use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
-use pocketmine\math\AxisAlignedBB;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
 use pocketmine\Server;
@@ -34,7 +32,6 @@ final class AntiCheatManager implements Listener {
     private const NUKER_BLOCKS_PER_SECOND = 8;
     private const NUKER_SPREAD_LIMIT = 4.5;
     private const NUKER_REACH_LIMIT = 7.0;
-    private const PHASE_BUFFER_LIMIT = 4;
     private const GRAVITY = 0.08;
     private const VERT_DRAG = 0.98;
     private const FLY_GRACE = 10;
@@ -43,7 +40,7 @@ final class AntiCheatManager implements Listener {
 
     /** @var array<string, int> */
     private array $reachViolations = [];
-    /** @var array<string, array{prevHoriz: float, speedBuf: float, air: int, tpExempt: int, kbExempt: int, prevDy: float, flyViol: float, phaseBuf: float}> */
+    /** @var array<string, array{prevHoriz: float, speedBuf: float, air: int, tpExempt: int, kbExempt: int, prevDy: float, flyViol: float}> */
     private array $state = [];
     /** @var array<string, list<float>> */
     private array $clicks = [];
@@ -89,7 +86,6 @@ final class AntiCheatManager implements Listener {
 
         $this->checkSpeed($player, $st, $tick, $horiz);
         $this->checkFly($player, $st, $tick, $dy);
-        $this->checkPhase($player, $st, $tick, $dx, $dy, $dz);
         $st['prevHoriz'] = $horiz;
     }
 
@@ -165,6 +161,13 @@ final class AntiCheatManager implements Listener {
         }
 
         $base = max(0.38, $player->getMovementSpeed() * 3.8);
+        if ($player->isSprinting()) {
+            $base *= 1.35;
+        }
+        $speedEffect = $player->getEffects()->get(VanillaEffects::SPEED());
+        if ($speedEffect !== null) {
+            $base *= 1.0 + (0.2 * $speedEffect->getEffectLevel());
+        }
         if (!$player->isOnGround()) {
             $base += 0.12;
         }
@@ -207,31 +210,6 @@ final class AntiCheatManager implements Listener {
         $st['prevDy'] = $dy;
     }
 
-    private function checkPhase(Player $player, array &$st, int $tick, float $dx, float $dy, float $dz): void  {
-        if ($tick < $st['tpExempt'] || $tick < $st['kbExempt'] || abs($dx) + abs($dy) + abs($dz) < 0.0001) {
-            $st['phaseBuf'] = 0.0;
-            return;
-        }
-
-        $box = $player->getBoundingBox()->offsetCopy($dx, $dy, $dz);
-        if ($this->touchesFallableBlock($player, $box)) {
-            $st['phaseBuf'] = 0.0;
-            return;
-        }
-
-        $collisions = $player->getWorld()->getCollisionBoxes($player, $box, false);
-        if ($collisions === []) {
-            $st['phaseBuf'] = max(0.0, $st['phaseBuf'] - 1.0);
-            return;
-        }
-
-        $st['phaseBuf'] += 1.0;
-        if ($st['phaseBuf'] >= self::PHASE_BUFFER_LIMIT) {
-            $st['phaseBuf'] = 0.0;
-            $this->flag($player, 'Phase', count($collisions) . ' collision(s) solide(s)');
-        }
-    }
-
     private function trackCps(Player $player): void  {
         $key = strtolower($player->getName());
         $now = microtime(true);
@@ -258,27 +236,6 @@ final class AntiCheatManager implements Listener {
         }
     }
 
-    private function touchesFallableBlock(Player $player, AxisAlignedBB $box): bool  {
-        $world = $player->getWorld();
-        $minX = (int) floor($box->minX + 0.00001);
-        $maxX = (int) floor($box->maxX - 0.00001);
-        $minY = (int) floor($box->minY + 0.00001);
-        $maxY = (int) floor($box->maxY - 0.00001);
-        $minZ = (int) floor($box->minZ + 0.00001);
-        $maxZ = (int) floor($box->maxZ - 0.00001);
-
-        for ($x = $minX; $x <= $maxX; ++$x) {
-            for ($y = $minY; $y <= $maxY; ++$y) {
-                for ($z = $minZ; $z <= $maxZ; ++$z) {
-                    if ($world->getBlockAt($x, $y, $z) instanceof Fallable) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     private function inLiquid(Player $player): bool  {
         return $player->getWorld()->getBlock($player->getPosition()) instanceof Liquid
             || $player->getWorld()->getBlock($player->getPosition()->add(0, 1, 0)) instanceof Liquid;
@@ -293,9 +250,9 @@ final class AntiCheatManager implements Listener {
         return str_contains(strtolower($player->getWorld()->getBlockAt($pos->getFloorX(), $pos->getFloorY() - 1, $pos->getFloorZ())->getName()), 'ice');
     }
 
-    /** @return array{prevHoriz: float, speedBuf: float, air: int, tpExempt: int, kbExempt: int, prevDy: float, flyViol: float, phaseBuf: float} */
+    /** @return array{prevHoriz: float, speedBuf: float, air: int, tpExempt: int, kbExempt: int, prevDy: float, flyViol: float} */
     private function emptyState(): array  {
-        return ['prevHoriz' => 0.0, 'speedBuf' => 0.0, 'air' => 0, 'tpExempt' => 0, 'kbExempt' => 0, 'prevDy' => 0.0, 'flyViol' => 0.0, 'phaseBuf' => 0.0];
+        return ['prevHoriz' => 0.0, 'speedBuf' => 0.0, 'air' => 0, 'tpExempt' => 0, 'kbExempt' => 0, 'prevDy' => 0.0, 'flyViol' => 0.0];
     }
 
     private function flag(Player $player, string $check, string $details): void  {
