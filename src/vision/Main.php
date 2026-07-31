@@ -13,6 +13,7 @@ use vision\commands\LeaderboardCommand;
 use vision\commands\MaintenanceCommand;
 use vision\commands\RekitCommand;
 use vision\commands\RejoinCommand;
+use vision\commands\RankCommand;
 use vision\commands\SettingsCommand;
 use vision\commands\SpawnCommand;
 use vision\commands\StatsCommand;
@@ -50,6 +51,7 @@ final class Main extends PluginBase {
             new MaintenanceCommand($this),
             new RekitCommand(),
             new RejoinCommand(),
+            new RankCommand(),
             new SettingsCommand(),
             new SpawnCommand(),
             new StatsCommand(),

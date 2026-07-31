@@ -38,6 +38,29 @@ final class RankManager {
         return $this->rank(RankType::fromString((string) $row['rank_name']) ?? RankType::PAYSAN);
     }
 
+    public function setPlayerRank(string $player, RankType $rank, ?int $expiresAt = null): void {
+        $name = strtolower($player);
+        $exists = $this->database->prepare('SELECT 1 FROM player_ranks WHERE player_name = :player');
+        $exists->execute(['player' => $name]);
+        $parameters = [
+            'player' => $name,
+            'rank' => $rank->name,
+            'expires' => $expiresAt,
+            'updated' => time(),
+        ];
+
+        if ($exists->fetchColumn() !== false) {
+            $statement = $this->database->prepare(
+                'UPDATE player_ranks SET rank_name = :rank, expires_at = :expires, updated_at = :updated WHERE player_name = :player'
+            );
+        } else {
+            $statement = $this->database->prepare(
+                'INSERT INTO player_ranks (player_name, rank_name, expires_at, updated_at) VALUES (:player, :rank, :expires, :updated)'
+            );
+        }
+        $statement->execute($parameters);
+    }
+
     public function rank(RankType $type): RankComponent  {
         $i = 0;
         foreach (RankType::cases() as $case) {
