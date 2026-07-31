@@ -183,7 +183,7 @@ final class AntiCheatManager implements Listener {
     private function checkFly(Player $player, array &$st, int $tick, float $dy): void  {
         $effects = $player->getEffects();
         if ($player->isOnGround() || $this->inLiquid($player) || $this->onClimbable($player)
-            || $effects->has(VanillaEffects::LEVITATION()) || $effects->has(VanillaEffects::SLOW_FALLING())
+            || $effects->has(VanillaEffects::LEVITATION())
             || $tick < $st['tpExempt'] || $tick < $st['kbExempt']) {
             $st['air'] = 0;
             $st['flyViol'] = 0.0;
