@@ -81,7 +81,7 @@ final class Main extends PluginBase {
 
     private function removeNonOpVanillaCommands(): void {
         $allowed = [
-            'ban', 'ban-ip', 'banlist', 'clear',
+            'ban', 'ban-ip', 'banlist',
             'deop', 'difficulty', 'effect',
             'enchant', 'gamemode', 'give', 'kick',
             'kill', 'op', 'pardon', 'pardon-ip',
