@@ -30,8 +30,8 @@ use vision\managers\Manager;
 final class AIFightManager implements Listener {
     private const MAX_SESSIONS = 6;
     private const FIGHT_DURATION_TICKS = 20 * 60 * 10;
-    private const BASE_COOLDOWN_SECONDS = 15 * 60;
-    private const MIN_COOLDOWN_SECONDS = 5 * 60;
+    private const BASE_COOLDOWN_SECONDS = 5 * 60;
+    private const MIN_COOLDOWN_SECONDS = 60;
 
     private const PROFILES = [
         'easy' => ['reach' => 2.45, 'speed' => 0.34, 'attack_ticks' => 5, 'accuracy' => 62, 'heal' => 58, 'strafe' => 12, 'pearl' => 12, 'pearl_ticks' => 300],

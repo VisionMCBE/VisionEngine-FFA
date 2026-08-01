@@ -46,6 +46,8 @@ final class PlayerListeners implements Listener {
     private array $blockedPearlTeleports = [];
     /** @var array<string, int> */
     private array $blockedExternalHealing = [];
+    /** @var array<string, int> */
+    private array $chatCooldowns = [];
 
     public function __construct(private readonly Main $plugin) {}
 
@@ -87,7 +89,8 @@ final class PlayerListeners implements Listener {
     }
 
     public function handlePlayerQuitEvent(PlayerQuitEvent $event): void  {
-        unset($this->blockedPearlTeleports[strtolower($event->getPlayer()->getName())]);
+        $key = strtolower($event->getPlayer()->getName());
+        unset($this->blockedPearlTeleports[$key], $this->chatCooldowns[$key]);
         $player = $event->getPlayer();
         $event->setQuitMessage('');
         Manager::SCOREBOARD()->remove($player);
@@ -110,20 +113,23 @@ final class PlayerListeners implements Listener {
 
     /** @priority HIGHEST */
     public function handleEntityDamageByEntityEvent(EntityDamageByEntityEvent $event): void  {
-        Manager::KNOCKBACK()->apply($event);
-
         $victim = $event->getEntity();
         $damager = $event->getDamager();
-        if (!$victim instanceof Player || !$damager instanceof Player || $event->isCancelled()) {
+        if (!$victim instanceof Player || !$damager instanceof Player) {
             return;
         }
 
-        if (Manager::AIFIGHT()->isFighting($victim) || Manager::AIFIGHT()->isFighting($damager)) {
+        if ($this->isProtectedByKitFfa($victim) || $this->isProtectedByKitFfa($damager)) {
             $event->cancel();
             return;
         }
 
-        if (Manager::FFA()->isInside($victim->getPosition()) || Manager::FFA()->isInside($damager->getPosition())) {
+        if ($event->isCancelled()) {
+            return;
+        }
+        Manager::KNOCKBACK()->apply($event);
+
+        if (Manager::AIFIGHT()->isFighting($victim) || Manager::AIFIGHT()->isFighting($damager)) {
             $event->cancel();
             return;
         }
@@ -146,6 +152,7 @@ final class PlayerListeners implements Listener {
         }
 
         $event->cancel();
+        $this->removeEnderPearls($victim);
         $victim->setHealth($victim->getMaxHealth());
         Manager::MATCH()->resolve($damager, $victim);
         $spawn = Manager::FFA()->spawnPosition();
@@ -166,6 +173,17 @@ final class PlayerListeners implements Listener {
 
     public function handlePlayerChatEvent(PlayerChatEvent $event): void  {
         $player = $event->getPlayer();
+        $key = strtolower($player->getName());
+        $tick = Server::getInstance()->getTick();
+        $remaining = ($this->chatCooldowns[$key] ?? 0) - $tick;
+        if ($remaining > 0) {
+            $event->cancel();
+            $player->sendMessage(Manager::BRANDING()->format('{prefix}{error}Veuillez patienter {primary}')
+                . (int) ceil($remaining / 20) . Manager::BRANDING()->format(' {error}seconde(s) avant de renvoyer un message.'));
+            return;
+        }
+        $this->chatCooldowns[$key] = $tick + 60;
+
         $rank = Manager::RANK()->getPlayerRank($player->getName());
         $brand = Manager::BRANDING();
         $format = $brand->format('{dark}[') . $rank->getColor() . $rank->getName() . $brand->format('{dark}] ')
@@ -177,6 +195,7 @@ final class PlayerListeners implements Listener {
 
     public function handlePlayerDeathEvent(PlayerDeathEvent $event): void  {
         $victim = $event->getPlayer();
+        $this->removeEnderPearls($victim);
         $event->setDrops([]);
         $event->setXpDropAmount(0);
         $event->setDeathMessage('');
@@ -358,6 +377,19 @@ final class PlayerListeners implements Listener {
         }
         unset($this->blockedPearlTeleports[$key]);
         $event->cancel();
+    }
+
+    private function isProtectedByKitFfa(Player $player): bool {
+        return Manager::FFA()->isInside($player->getPosition()) || Manager::COMBAT()->wasInside($player);
+    }
+
+    private function removeEnderPearls(Player $player): void {
+        unset($this->blockedPearlTeleports[strtolower($player->getName())]);
+        foreach ($player->getWorld()->getEntities() as $entity) {
+            if ($entity instanceof EnderPearl && $entity->getOwningEntity() === $player) {
+                $entity->flagForDespawn();
+            }
+        }
     }
 
 }

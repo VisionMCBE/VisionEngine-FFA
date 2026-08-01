@@ -104,7 +104,7 @@ final class ItemRegistry {
     private static function registerSwords(): void  {
         $group = Manager::BRANDING()->itemText('creative_groups.swords', 'Épées {server_name}');
         foreach ([
-            ['visionne_sword', 5500, 25],
+            ['visionne_sword', 5500, 30],
         ] as [$id, $durability, $attack]) {
             NayTools::item('visionengine:' . $id, 'item.visionengine:' . $id . '.name')
                 ->texture($id)

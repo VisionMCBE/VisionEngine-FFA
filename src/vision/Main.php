@@ -17,6 +17,7 @@ use vision\commands\RejoinCommand;
 use vision\commands\RankCommand;
 use vision\commands\SettingsCommand;
 use vision\commands\SpawnCommand;
+use vision\commands\SpecCommand;
 use vision\commands\StatsCommand;
 use vision\commands\XyzCommand;
 use vision\items\ItemRegistry;
@@ -56,6 +57,7 @@ final class Main extends PluginBase {
             new RankCommand(),
             new SettingsCommand(),
             new SpawnCommand(),
+            new SpecCommand(),
             new StatsCommand(),
             new XyzCommand($this),
         ]);
